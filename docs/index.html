@@ -1,0 +1,461 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Manual de CiberLab</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Cómo usar CiberLab paso a paso: modo ciberseguridad en bspwm, laboratorio de máquinas virtuales, labs Docker, análisis de logs y auditorías.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;600;700&display=swap">
+<style>
+/* Layout: índice fijo a la izquierda (escritorio) + columna de lectura; cada capítulo es un paso numerado con terminal de ejemplo */
+:root{
+  --bg:#f4f7f5; --bg2:#e9efec; --panel:#ffffff; --line:#d3ddd8; --tx:#14201a; --tx2:#43544b; --mut:#6b7c73;
+  --acc:#00813a; --acc-soft:rgba(0,129,58,.10); --cyan:#0b7f95; --warn:#a35f00; --warn-soft:rgba(163,95,0,.10); --red:#c0263f;
+  --term:#0b1016; --term-tx:#cfd9e3; --term-mut:#61748a; --term-acc:#00fa5c;
+  --display:"JetBrains Mono","JetBrainsMono Nerd Font",ui-monospace,monospace;
+  --body:"IBM Plex Sans","Noto Sans","Segoe UI",system-ui,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,"Fira Code",monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#080b10; --bg2:#0d1218; --panel:#111821; --line:#1f2c3a; --tx:#d6e0e9; --tx2:#9fb0c0; --mut:#6b7f94;
+  --acc:#00fa5c; --acc-soft:rgba(0,250,92,.09); --cyan:#22d3ee; --warn:#f5b700; --warn-soft:rgba(245,183,0,.09); --red:#ff5c78;
+  --term:#05080c; --term-tx:#cfd9e3; --term-mut:#61748a; --term-acc:#00fa5c; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#080b10; --bg2:#0d1218; --panel:#111821; --line:#1f2c3a; --tx:#d6e0e9; --tx2:#9fb0c0; --mut:#6b7f94;
+  --acc:#00fa5c; --acc-soft:rgba(0,250,92,.09); --cyan:#22d3ee; --warn:#f5b700; --warn-soft:rgba(245,183,0,.09); --red:#ff5c78;
+  --term:#05080c; --term-tx:#cfd9e3; --term-mut:#61748a; --term-acc:#00fa5c; color-scheme:dark}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.65 var(--body)}
+a{color:var(--cyan)} a:focus-visible,summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+code,kbd{font-family:var(--mono);font-size:.88em}
+code{background:var(--bg2);border:1px solid var(--line);border-radius:4px;padding:.05em .35em}
+kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:0 .4em;background:var(--panel)}
+.wrap{max-width:1180px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+
+/* cabecera */
+header{border-bottom:1px solid var(--line);background:var(--bg2)}
+header .wrap{padding-block:44px 36px;display:grid;gap:14px}
+.prompt{font:600 13px var(--mono);color:var(--acc);letter-spacing:.04em}
+h1{font:700 clamp(30px,5vw,46px)/1.1 var(--display);margin:0;letter-spacing:-.02em;text-wrap:balance}
+h1 b{color:var(--acc)}
+.lead{max-width:62ch;margin:0;color:var(--tx2);font-size:17px}
+.facts{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+.facts span{font:600 12px var(--mono);border:1px solid var(--line);border-radius:999px;padding:3px 10px;color:var(--tx2);background:var(--panel)}
+
+/* rejilla */
+.grid{display:grid;grid-template-columns:230px minmax(0,1fr);gap:48px;padding-block:36px 80px}
+nav.toc{position:sticky;top:20px;align-self:start;font:500 13.5px/1.4 var(--body)}
+nav.toc p{font:700 11px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--mut);margin:0 0 10px}
+nav.toc ol{list-style:none;margin:0;padding:0;display:grid;gap:2px;counter-reset:t}
+nav.toc li{counter-increment:t}
+nav.toc a{display:flex;gap:10px;padding:5px 8px;border-radius:6px;color:var(--tx2);text-decoration:none}
+nav.toc a::before{content:counter(t,decimal-leading-zero);font:600 11px/1.9 var(--mono);color:var(--mut)}
+nav.toc a:hover{background:var(--bg2);color:var(--tx)}
+main{min-width:0}
+@media (max-width:860px){.grid{grid-template-columns:minmax(0,1fr);gap:24px}
+  nav.toc{position:static;border:1px solid var(--line);border-radius:10px;padding:14px;background:var(--panel)}
+  nav.toc ol{grid-template-columns:repeat(auto-fill,minmax(180px,1fr))}}
+
+/* capítulos */
+section{padding-block:8px 44px;border-bottom:1px dashed var(--line);margin-bottom:40px;scroll-margin-top:16px}
+section:last-child{border-bottom:0}
+.eyebrow{font:700 12px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--acc);margin:0 0 6px}
+h2{font:700 clamp(22px,3vw,28px)/1.2 var(--display);margin:0 0 12px;letter-spacing:-.01em;text-wrap:balance}
+h3{font:600 17px/1.3 var(--body);margin:28px 0 8px}
+p,li{max-width:68ch} p{margin:0 0 12px}
+ul,ol{padding-left:22px;margin:0 0 14px} li{margin-bottom:4px}
+.intro{color:var(--tx2);font-size:17px}
+
+/* pasos */
+ol.steps{list-style:none;padding:0;margin:18px 0;counter-reset:s;display:grid;gap:14px}
+ol.steps>li{counter-increment:s;display:grid;grid-template-columns:34px minmax(0,1fr);gap:14px;max-width:none}
+ol.steps>li::before{content:counter(s);display:grid;place-items:center;width:30px;height:30px;border-radius:50%;border:1.5px solid var(--acc);color:var(--acc);font:700 13px var(--mono);margin-top:1px}
+ol.steps>li>div{min-width:0}
+ol.steps>li p:last-child{margin-bottom:0}
+
+/* terminal */
+.term{background:var(--term);color:var(--term-tx);border-radius:9px;margin:12px 0;font:13.5px/1.6 var(--mono);overflow:hidden;border:1px solid var(--line)}
+.term .bar{display:flex;align-items:center;gap:6px;padding:7px 12px;border-bottom:1px solid #1a2532;color:var(--term-mut);font-size:11.5px}
+.term .bar i{width:9px;height:9px;border-radius:50%;background:#2a3b4d;display:inline-block}
+.term .bar span{margin-left:6px}
+.term pre{margin:0;padding:12px 14px;overflow-x:auto;white-space:pre}
+.term .c{color:var(--term-mut)} .term .p{color:var(--term-acc);user-select:none} .term .o{color:#93a4b5}
+
+/* avisos */
+.note,.warn{border-radius:8px;padding:12px 16px;margin:16px 0;max-width:68ch;font-size:15px}
+.note{background:var(--acc-soft);border:1px solid color-mix(in srgb,var(--acc) 35%,transparent)}
+.warn{background:var(--warn-soft);border:1px solid color-mix(in srgb,var(--warn) 40%,transparent)}
+.note b,.warn b{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;display:block;margin-bottom:2px}
+.note b{color:var(--acc)} .warn b{color:var(--warn)}
+
+/* tablas */
+.tbl{overflow-x:auto;margin:14px 0;border:1px solid var(--line);border-radius:9px;background:var(--panel)}
+table{border-collapse:collapse;width:100%;font-size:14.5px}
+th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font:700 11.5px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--mut);background:var(--bg2)}
+tr:last-child td{border-bottom:0}
+td.k{font:700 14px var(--mono);color:var(--acc);white-space:nowrap;font-variant-numeric:tabular-nums}
+
+/* mapa de escritorios */
+.desks{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:16px 0}
+.desk{border:1px solid var(--line);border-radius:9px;padding:12px;background:var(--panel);min-width:0}
+.desk .n{font:700 22px var(--mono);color:var(--acc);line-height:1}
+.desk .t{font-weight:600;margin-top:6px;font-size:14.5px}
+.desk .d{color:var(--mut);font-size:13px;line-height:1.4;margin-top:2px}
+@media (max-width:640px){.desks{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* desplegables */
+details{border:1px solid var(--line);border-radius:9px;background:var(--panel);margin:10px 0;max-width:72ch}
+summary{cursor:pointer;padding:10px 14px;font-weight:600}
+details>div{padding:0 16px 12px}
+
+/* plan */
+.plan{display:grid;gap:10px;margin:16px 0}
+.phase{display:grid;grid-template-columns:110px minmax(0,1fr);gap:16px;border:1px solid var(--line);border-radius:9px;padding:14px;background:var(--panel)}
+.phase .w{font:700 13px var(--mono);color:var(--acc)}
+.phase .w small{display:block;color:var(--mut);font-weight:600;font-size:11.5px;margin-top:2px}
+.phase p{margin:0}
+@media (max-width:540px){.phase{grid-template-columns:minmax(0,1fr);gap:6px}}
+footer{border-top:1px solid var(--line);color:var(--mut);font-size:14px}
+footer .wrap{padding-block:24px 40px}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <div class="prompt">melvin@arch:~$ ciberlab --ayuda</div>
+    <h1>Manual de Ciber<b>Lab</b></h1>
+    <p class="lead">Cómo usar tu entorno de ciberseguridad en bspwm de principio a fin: activar el modo, aprender en cada escritorio, montar el laboratorio de máquinas virtuales, practicar con aplicaciones vulnerables, analizar logs y llevar una auditoría real hasta el informe.</p>
+    <div class="facts"><span>8 escritorios</span><span>red 192.168.56.0/24</span><span>servidor 127.0.0.1:8766</span><span>datos en ~/CiberLab</span></div>
+  </div>
+</header>
+
+<div class="wrap grid">
+  <nav class="toc" aria-label="Índice">
+    <p>Índice</p>
+    <ol>
+      <li><a href="#antes">Antes de empezar</a></li>
+      <li><a href="#activar">Activar el modo</a></li>
+      <li><a href="#aprender">Aprender con las lecciones</a></li>
+      <li><a href="#red">Tu red de laboratorio</a></li>
+      <li><a href="#ms2">Primera práctica con ms2</a></li>
+      <li><a href="#kali">Crear tu Kali</a></li>
+      <li><a href="#docker">Labs web con Docker</a></li>
+      <li><a href="#vulns">Catálogo de vulnerabilidades</a></li>
+      <li><a href="#logs">Blue Team: leer logs</a></li>
+      <li><a href="#auditoria">Hacer una auditoría</a></li>
+      <li><a href="#plan">Plan de principiante a experto</a></li>
+      <li><a href="#problemas">Salir, datos y problemas</a></li>
+    </ol>
+  </nav>
+
+  <main>
+
+  <section id="antes">
+    <p class="eyebrow">Paso 0</p>
+    <h2>Antes de empezar</h2>
+    <p class="intro">CiberLab es una aplicación local: un pequeño servidor en tu equipo y ventanas de Brave en modo aplicación, una por escritorio. No sale nada a Internet salvo las descargas que tú pidas (imágenes Docker, ISOs).</p>
+    <h3>Lo que necesitas instalado</h3>
+    <div class="term"><div class="bar"><i></i><i></i><i></i><span>zsh</span></div><pre><span class="c"># Comprueba que tienes todo</span>
+<span class="p">$ </span>VBoxManage --version        <span class="c"># máquinas virtuales</span>
+<span class="p">$ </span>docker --version            <span class="c"># laboratorios web</span>
+<span class="p">$ </span>systemctl is-active docker  <span class="c"># debe decir «active»</span>
+<span class="p">$ </span>df -h /                     <span class="c"># espacio libre</span>
+
+<span class="c"># Si Docker no está arrancado:</span>
+<span class="p">$ </span>sudo systemctl enable --now docker
+<span class="p">$ </span>sudo usermod -aG docker $USER   <span class="c"># y cierra sesión para que aplique</span></pre></div>
+    <div class="warn"><b>Espacio en disco</b>Ahora mismo tienes unos 6–7 GB libres en <code>/</code>. Una Kali ocupa 20–30 GB. Antes de crear VMs grandes, libera espacio (por ejemplo <code>sudo pacman -Sc</code> y <code>docker system prune</code>) o guarda las VMs en tu partición grande de 832 GB.</div>
+    <div class="note"><b>La regla que no cambia</b>Todo lo que hagas con estas herramientas, hazlo solo contra tus propias máquinas del laboratorio o contra sistemas de un cliente que te haya dado autorización por escrito. En España, el acceso sin permiso es delito (art. 197 bis del Código Penal).</div>
+  </section>
+
+  <section id="activar">
+    <p class="eyebrow">Paso 1</p>
+    <h2>Activar el modo Ciberseguridad</h2>
+    <p class="intro">Funciona igual que tus modos privado, paranoico y finanzas: un icono en la barra de polybar.</p>
+    <ol class="steps">
+      <li><div><p>Busca la calavera (☠, icono Nerd Font <code>nf-md-skull</code>) en el módulo de modos de la barra superior, junto a normal, privado, paranoico y finanzas.</p></div></li>
+      <li><div><p><b>Clic izquierdo</b>: activa el modo. Cambia el fondo de pantalla y abre un programa distinto en cada escritorio (tarda unos segundos). La calavera se pone en cian.</p></div></li>
+      <li><div><p><b>Clic derecho</b>: abre directamente el Laboratorio (máquinas virtuales), sin activar el modo completo.</p></div></li>
+      <li><div><p>Muévete entre escritorios como siempre, por ejemplo con <kbd>Super</kbd> + <kbd>1</kbd>…<kbd>8</kbd>.</p></div></li>
+    </ol>
+    <div class="desks">
+      <div class="desk"><div class="n">1</div><div class="t">Ruta y fundamentos</div><div class="d">Linux, redes, Bash, metodología. Empieza aquí.</div></div>
+      <div class="desk"><div class="n">2</div><div class="t">Ofensiva y Red Team</div><div class="d">Metodología de pentesting y fases de un ejercicio.</div></div>
+      <div class="desk"><div class="n">3</div><div class="t">Hacking web</div><div class="d">OWASP Top 10, Burp, labs Docker.</div></div>
+      <div class="desk"><div class="n">4</div><div class="t">Vulnerabilidades</div><div class="d">Qué son, dónde practicarlas, cómo detectarlas y defenderte.</div></div>
+      <div class="desk"><div class="n">5</div><div class="t">Blue Team y logs</div><div class="d">Detección, SIEM, bastionado y práctica de logs.</div></div>
+      <div class="desk"><div class="n">6</div><div class="t">Redes y WiFi</div><div class="d">Wireshark, segmentación, seguridad WiFi.</div></div>
+      <div class="desk"><div class="n">7</div><div class="t">Cloud y servidores</div><div class="d">AWS/Azure, contenedores, Linux en producción.</div></div>
+      <div class="desk"><div class="n">8</div><div class="t">Laboratorio + Auditorías</div><div class="d">Dos ventanas: tus VMs y tus auditorías.</div></div>
+    </div>
+    <p>También puedes abrir cualquier programa desde la terminal:</p>
+    <div class="term"><div class="bar"><i></i><i></i><i></i><span>zsh</span></div><pre><span class="p">$ </span>ciberlab                <span class="c"># abre el inicio</span>
+<span class="p">$ </span>ciberlab lab            <span class="c"># abre el laboratorio</span>
+<span class="p">$ </span>ciberlab auditorias     <span class="c"># abre las auditorías</span>
+<span class="p">$ </span>ciberlab-mode status && echo activo</pre></div>
+  </section>
+
+  <section id="aprender">
+    <p class="eyebrow">Paso 2</p>
+    <h2>Aprender con las lecciones</h2>
+    <p class="intro">Cada escritorio tiene un temario dividido en niveles (principiante, intermedio, avanzado). Todas las lecciones siguen la misma estructura, así que en cuanto domines una sabes usar todas.</p>
+    <div class="tbl"><table>
+      <thead><tr><th>Parte</th><th>Para qué sirve</th></tr></thead>
+      <tbody>
+        <tr><td class="k">Objetivo</td><td>Qué sabrás hacer al terminar.</td></tr>
+        <tr><td class="k">Teoría</td><td>Lo mínimo para entender el porqué.</td></tr>
+        <tr><td class="k">Paso a paso</td><td>Comandos con botón de copiar y la explicación de su salida.</td></tr>
+        <tr><td class="k">Defensa</td><td>Cómo se detecta y cómo se protege lo que acabas de ver.</td></tr>
+        <tr><td class="k">Test</td><td>Preguntas con explicación de la respuesta correcta.</td></tr>
+        <tr><td class="k">Reto</td><td>Un ejercicio para hacer tú solo en el laboratorio.</td></tr>
+        <tr><td class="k">Apuntes</td><td>Tu cuaderno; se guarda solo en <code>~/.local/share/ciberlab/</code>.</td></tr>
+      </tbody>
+    </table></div>
+    <h3>Ejemplo: tu primera sesión de 45 minutos</h3>
+    <ol class="steps">
+      <li><div><p>Ve al escritorio 1. En el panel de inicio pulsa <b>Continuar</b> en «Siguiente lección recomendada».</p></div></li>
+      <li><div><p>Lee la teoría y ejecuta en tu terminal los comandos del paso a paso. Por ejemplo, en la lección de redes:</p>
+        <div class="term"><div class="bar"><i></i><i></i><i></i><span>zsh</span></div><pre><span class="p">$ </span>ip -br addr               <span class="c"># tus interfaces y sus IPs</span>
+<span class="o">lo        UNKNOWN  127.0.0.1/8
+vboxnet0  UP       192.168.56.1/24      &lt;- la red del laboratorio</span>
+<span class="p">$ </span>ss -tulpn                 <span class="c"># qué puertos escucha tu equipo</span>
+<span class="o">tcp LISTEN 127.0.0.1:8766  users:(("python3",...))   &lt;- CiberLab</span></pre></div></div></li>
+      <li><div><p>Responde el test. Si fallas, lee la explicación antes de seguir.</p></div></li>
+      <li><div><p>Copia en <b>Apuntes</b> lo que te costó entender y pulsa <b>Marcar como completada ✓</b>. El progreso aparece en el panel de inicio.</p></div></li>
+    </ol>
+    <div class="note"><b>Truco</b>La barra de búsqueda de arriba busca en todas las lecciones y vulnerabilidades a la vez. Prueba con «ssh» o «XSS».</div>
+  </section>
+
+  <section id="red">
+    <p class="eyebrow">Paso 3</p>
+    <h2>Tu red de laboratorio</h2>
+    <p class="intro">Todas las prácticas ocurren en una red aislada que solo existe dentro de tu equipo. Ya la tienes creada.</p>
+    <div class="term"><div class="bar"><i></i><i></i><i></i><span>esquema</span></div><pre><span class="c">            Internet</span>
+<span class="c">               │  (solo las VMs atacantes, por NAT)</span>
+   ┌───────────────┴───────────────┐
+   │  Tu Arch  ·  vboxnet0 192.168.56.1   │
+   └───────────────┬───────────────┘
+                   │  red solo-anfitrión 192.168.56.0/24  (DHCP .101 – .254)
+        ┌──────────┼──────────────┐
+     Kali        ms2            Ubuntu / Windows
+   NAT + lab   solo lab           solo lab
+   (atacante)  (objetivo)        (objetivo / blue team)</pre></div>
+    <ul>
+      <li><b>Atacantes</b> (Kali, Parrot, SIEM): dos tarjetas. NAT para descargar actualizaciones y la red del laboratorio para trabajar.</li>
+      <li><b>Objetivos</b> (ms2, servidores, máquinas vulnerables): solo la red del laboratorio. Así una máquina vulnerable nunca queda expuesta a Internet ni a tu red de casa.</li>
+      <li>En el Laboratorio, el botón <b>🔒 Aislar</b> deja una VM en modo objetivo y <b>🌐 Modo atacante</b> la pasa a modo atacante (con la VM apagada).</li>
+    </ul>
+    <p>Para comprobarla desde la terminal:</p>
+    <div class="term"><div class="bar"><i></i><i></i><i></i><span>zsh</span></div><pre><span class="p">$ </span>VBoxManage list hostonlyifs | grep -E 'Name|IPAddress|Status'
+<span class="o">Name:            vboxnet0
+IPAddress:       192.168.56.1
+Status:          Up</span>
+<span class="p">$ </span>VBoxManage showvminfo ms2 --machinereadable | grep '^nic'
+<span class="o">nic1="hostonly"
+nic2="none"</span></pre></div>
+  </section>
+
+  <section id="ms2">
+    <p class="eyebrow">Paso 4</p>
+    <h2>Primera práctica: reconocimiento de ms2</h2>
+    <p class="intro">ms2 (Metasploitable 2) es una máquina Linux hecha para practicar, y ya está aislada. Vas a descubrirla en la red e inventariar sus servicios, igual que en la primera fase de una auditoría.</p>
+    <ol class="steps">
+      <li><div><p>Escritorio 8 → <b>Laboratorio → Máquinas virtuales</b>. En ms2 pulsa <b>📸 Snapshot</b> y llámala <code>limpia</code>. Con ella podrás volver al estado original siempre.</p></div></li>
+      <li><div><p>Pulsa <b>▶ Sin ventana</b> (headless). En 30–60 segundos aparecerá su IP en la tabla, normalmente <code>192.168.56.101</code>.</p></div></li>
+      <li><div><p>Desde tu terminal, comprueba que responde y guarda los resultados en la carpeta de evidencias:</p>
+        <div class="term"><div class="bar"><i></i><i></i><i></i><span>zsh · ~/CiberLab/loot</span></div><pre><span class="p">$ </span>cd ~/CiberLab/loot && mkdir -p ms2 && cd ms2
+<span class="p">$ </span>ping -c 2 192.168.56.101
+<span class="p">$ </span>nmap -sn 192.168.56.0/24                       <span class="c"># ¿qué equipos hay en el laboratorio?</span>
+<span class="p">$ </span>nmap -sV -T4 -oN servicios.txt 192.168.56.101  <span class="c"># puertos y versiones</span>
+<span class="o">PORT     STATE SERVICE     VERSION
+21/tcp   open  ftp         vsftpd 2.3.4
+22/tcp   open  ssh         OpenSSH 4.7p1 Debian 8ubuntu1
+80/tcp   open  http        Apache httpd 2.2.8 ((Ubuntu) DAV/2)
+3306/tcp open  mysql       MySQL 5.0.51a-3ubuntu5
+...</span></pre></div></div></li>
+      <li><div><p>Piensa como un auditor. Para cada servicio, anota en tus apuntes si la versión está soportada y qué riesgo supone. Por ejemplo, «OpenSSH 4.7 y Apache 2.2.8 llevan más de 15 años sin soporte» es un hallazgo real de cualquier auditoría.</p></div></li>
+      <li><div><p>Busca cada servicio en el escritorio 4 (Vulnerabilidades) y en la lección correspondiente, y sigue los labs guiados enlazados.</p></div></li>
+      <li><div><p>Al terminar: <b>⏻ Apagar</b> y, si has cambiado cosas, <b>⟲ Restaurar</b> la instantánea <code>limpia</code>.</p></div></li>
+    </ol>
+    <div class="note"><b>Credenciales de ms2</b>Usuario <code>msfadmin</code>, contraseña <code>msfadmin</code>. Para entrar en su consola, arráncala con <b>▶ Iniciar</b> (con ventana).</div>
+  </section>
+
+  <section id="kali">
+    <p class="eyebrow">Paso 5</p>
+    <h2>Crear tu máquina Kali</h2>
+    <p class="intro">Kali será tu equipo de trabajo dentro del laboratorio. La forma más rápida es importar la imagen oficial para VirtualBox.</p>
+    <ol class="steps">
+      <li><div><p>Libera al menos 30 GB (ver Paso 0). Descarga de <a href="https://www.kali.org/get-kali/#kali-virtual-machines" rel="noopener">kali.org → Virtual Machines</a> la imagen de VirtualBox y descomprímela en <code>~/CiberLab/isos/</code>.</p>
+        <div class="term"><div class="bar"><i></i><i></i><i></i><span>zsh</span></div><pre><span class="p">$ </span>cd ~/CiberLab/isos
+<span class="p">$ </span>sha256sum kali-linux-*-virtualbox-amd64.7z   <span class="c"># compárala con la de la web</span>
+<span class="p">$ </span>7z x kali-linux-*-virtualbox-amd64.7z</pre></div></div></li>
+      <li><div><p>Laboratorio → <b>➕ Crear / importar VM</b> → elige el fichero <code>.vbox</code> que se ha extraído. Para una ISO usa en su lugar <b>Crear</b> con la plantilla «Kali Linux (atacante)»: 4 GB de RAM, 2 CPU y 40 GB de disco.</p></div></li>
+      <li><div><p>Con la VM apagada pulsa <b>🌐 Modo atacante</b>. Así queda con NAT para Internet y con la red del laboratorio.</p></div></li>
+      <li><div><p>Arráncala (usuario y contraseña <code>kali</code> / <code>kali</code>), cambia la contraseña y actualiza el sistema:</p>
+        <div class="term"><div class="bar"><i></i><i></i><i></i><span>kali</span></div><pre><span class="p">kali$ </span>passwd
+<span class="p">kali$ </span>sudo apt update && sudo apt full-upgrade -y
+<span class="p">kali$ </span>ip -br addr        <span class="c"># eth1 debería tener 192.168.56.x</span>
+<span class="p">kali$ </span>ping -c 2 192.168.56.101   <span class="c"># ya ves a ms2</span></pre></div></div></li>
+      <li><div><p>Haz un <b>📸 Snapshot</b> llamado <code>recien-instalada</code>.</p></div></li>
+    </ol>
+    <details><summary>¿Y un laboratorio de Active Directory?</summary><div>
+      <p>Crea con las plantillas <b>Windows Server 2022 Eval</b> (controlador de dominio) y <b>Windows 10 Eval</b> (cliente). Las ISOs de evaluación de 180 días se descargan gratis del Evaluation Center de Microsoft. Las dos quedan solo en la red del laboratorio. Necesitas unos 100 GB y 8 GB de RAM libres.</p>
+    </div></details>
+    <details><summary>¿Y un SIEM para el Blue Team?</summary><div>
+      <p>La plantilla <b>SIEM</b> (8 GB de RAM, 80 GB de disco) está pensada para Wazuh o Security Onion. Instala el agente en las máquinas objetivo y verás sus eventos en el panel. Es el siguiente paso natural después de la práctica de logs del escritorio 5.</p>
+    </div></details>
+  </section>
+
+  <section id="docker">
+    <p class="eyebrow">Paso 6</p>
+    <h2>Labs web con Docker</h2>
+    <p class="intro">Aplicaciones vulnerables a propósito que se arrancan en un clic. Solo escuchan en <code>127.0.0.1</code>: nadie de tu red puede verlas.</p>
+    <div class="tbl"><table>
+      <thead><tr><th>Lab</th><th>Dirección</th><th>Para practicar</th></tr></thead>
+      <tbody>
+        <tr><td class="k">DVWA</td><td><code>127.0.0.1:8081</code></td><td>Lo clásico, con niveles de dificultad de low a impossible.</td></tr>
+        <tr><td class="k">Juice Shop</td><td><code>127.0.0.1:8082</code></td><td>Tienda moderna con más de 100 retos del OWASP Top 10.</td></tr>
+        <tr><td class="k">WebGoat</td><td><code>127.0.0.1:8083</code></td><td>Lecciones guiadas dentro de la propia app.</td></tr>
+        <tr><td class="k">bWAPP</td><td><code>127.0.0.1:8084</code></td><td>Muchísimos tipos de fallo web.</td></tr>
+        <tr><td class="k">VAmPI</td><td><code>127.0.0.1:8085</code></td><td>Seguridad de APIs REST.</td></tr>
+        <tr><td class="k">DVGA</td><td><code>127.0.0.1:8086</code></td><td>Seguridad de GraphQL.</td></tr>
+        <tr><td class="k">SSH target</td><td><code>127.0.0.1:2222</code></td><td>Bastionado de SSH y lectura de sus logs.</td></tr>
+      </tbody>
+    </table></div>
+    <h3>Ejemplo completo con DVWA</h3>
+    <ol class="steps">
+      <li><div><p>Laboratorio → <b>🐳 Laboratorios Docker</b> → DVWA → <b>▶ Iniciar</b>. La primera vez descarga la imagen (1–2 minutos).</p></div></li>
+      <li><div><p>Abre <code>http://127.0.0.1:8081</code> y entra con <code>admin</code> / <code>password</code>. Pulsa <b>Create / Reset Database</b> y vuelve a entrar.</p></div></li>
+      <li><div><p>En <b>DVWA Security</b> pon el nivel <code>low</code>. Abre la lección de hacking web que corresponda (escritorio 3) y haz el ejercicio en DVWA.</p></div></li>
+      <li><div><p>Sube a <code>medium</code> y <code>high</code>. Al final mira el código del nivel <code>impossible</code> con el botón «View Source»: así se escribe la versión segura, que es lo que recomendarás en tus informes.</p></div></li>
+      <li><div><p>Revisa lo que ha quedado registrado. Es justo lo que vería un analista del Blue Team:</p>
+        <div class="term"><div class="bar"><i></i><i></i><i></i><span>zsh</span></div><pre><span class="p">$ </span>docker logs ciberlab-dvwa 2>&1 | tail -20</pre></div></div></li>
+      <li><div><p>Pulsa <b>Detener</b> al terminar. El contenedor se borra y la próxima vez arranca limpio.</p></div></li>
+    </ol>
+  </section>
+
+  <section id="vulns">
+    <p class="eyebrow">Paso 7</p>
+    <h2>Catálogo de vulnerabilidades</h2>
+    <p class="intro">El escritorio 4 tiene fichas de las vulnerabilidades más comunes (inyecciones, XSS, control de acceso, configuraciones por defecto, credenciales débiles, software sin parchear, etc.). Cada ficha tiene cuatro pestañas.</p>
+    <div class="tbl"><table>
+      <thead><tr><th>Pestaña</th><th>Qué encuentras</th></tr></thead>
+      <tbody>
+        <tr><td class="k">Qué es</td><td>Explicación sencilla, un ejemplo e impacto real para una empresa.</td></tr>
+        <tr><td class="k">Dónde practicar</td><td>Qué lab de Docker, qué VM o qué plataforma guiada usar.</td></tr>
+        <tr><td class="k">Detectar</td><td>Qué buscar en logs, herramientas de escaneo y señales en una auditoría.</td></tr>
+        <tr><td class="k">Defensa</td><td>Cómo corregirlo y prevenirlo; es lo que pondrás en la recomendación del informe.</td></tr>
+      </tbody>
+    </table></div>
+    <p><b>Ejemplo de flujo:</b> en ms2 encontraste MySQL expuesto. Busca «credenciales» o «configuración» en el catálogo, lee Detectar y Defensa y escribe en tus apuntes la recomendación con tus palabras: «Restringir MySQL a localhost, eliminar usuarios sin contraseña, actualizar a una versión soportada».</p>
+  </section>
+
+  <section id="logs">
+    <p class="eyebrow">Paso 8</p>
+    <h2>Blue Team: aprender a leer logs</h2>
+    <p class="intro">En el escritorio 5, la herramienta <b>🔎 Práctica de análisis de logs</b> tiene tres incidentes simulados: un servidor Linux (<code>auth.log</code>), un servidor web (<code>access.log</code>) y eventos de Windows. Tienes que reconstruir lo ocurrido respondiendo preguntas.</p>
+    <ol class="steps">
+      <li><div><p>Elige el incidente de <code>auth.log</code>. Escribe en el filtro <code>Failed password</code> y observa qué IP aparece una y otra vez.</p></div></li>
+      <li><div><p>Cambia el filtro a <code>Accepted</code>: ¿alguna de esas IPs llegó a entrar? ¿Con qué usuario?</p></div></li>
+      <li><div><p>Busca lo que hizo después: <code>useradd|sudo|wget|curl</code>.</p></div></li>
+      <li><div><p>Escribe las respuestas: al acertar aparece <b>✔ correcto</b> (y tienes botón de <b>pista</b>). Descarga el <code>.log</code> y repite el análisis en la terminal, que es como lo harás de verdad:</p>
+        <div class="term"><div class="bar"><i></i><i></i><i></i><span>zsh</span></div><pre><span class="c"># IPs con más intentos fallidos</span>
+<span class="p">$ </span>grep 'Failed password' auth.log | grep -oE '([0-9]{1,3}\.){3}[0-9]{1,3}' | sort | uniq -c | sort -rn | head
+<span class="c"># ¿Entró alguna?</span>
+<span class="p">$ </span>grep 'Accepted' auth.log
+<span class="c"># Y en tu propio Arch, los intentos reales contra tu SSH (si lo tienes activo):</span>
+<span class="p">$ </span>journalctl -u sshd --since today | grep -c 'Failed'</pre></div></div></li>
+    </ol>
+    <div class="note"><b>Para subir de nivel</b>Haz lo mismo con el lab <code>SSH target</code> (puerto 2222). Prueba a entrar con una contraseña incorrecta varias veces y busca tus propios intentos con <code>docker logs ciberlab-ssh-target</code>. Después bastiona el servidor siguiendo la lección de SSH.</div>
+  </section>
+
+  <section id="auditoria">
+    <p class="eyebrow">Paso 9</p>
+    <h2>Hacer una auditoría de principio a fin</h2>
+    <p class="intro">El programa Auditorías (escritorio 8) te guía desde el contrato hasta el informe. Los datos se guardan en <code>~/CiberLab/auditorias/</code>. El ejemplo usa una empresa ficticia: haz tu primera auditoría contra tu propio laboratorio antes de hacer una para un cliente.</p>
+    <ol class="steps">
+      <li><div><p><b>Nueva auditoría.</b> Pulsa <b>＋ Nueva auditoría</b>. Ejemplo: cliente <i>Panadería López S.L. (ficticio)</i>, tamaño <code>pyme</code>, tipo de prueba caja gris, alcance <code>192.168.1.0/24</code>, router, NAS, web corporativa y correo. Fuera de alcance: TPV del banco.</p></div></li>
+      <li><div><p><b>Autorización.</b> Genera el documento con la plantilla, revísalo y <b>no toques nada hasta tenerlo firmado</b> por quien puede autorizarlo (el administrador o el gerente). Indica fechas, IPs, horario y persona de contacto para emergencias.</p></div></li>
+      <li><div><p><b>Checklist.</b> Al elegir <code>pyme</code> o <code>gran empresa</code>, la lista se adapta: una pyme no tiene SOC, pero sí copias de seguridad, router, Wi-Fi y correo. Marca cada punto como OK, fallo o no aplica. Un fallo se convierte en hallazgo con un clic.</p></div></li>
+      <li><div><p><b>Hallazgos con CVSS.</b> Un ejemplo realista:</p>
+        <div class="tbl"><table>
+          <tbody>
+            <tr><td class="k">Título</td><td>Router de la oficina con la contraseña de administrador de fábrica</td></tr>
+            <tr><td class="k">Vector</td><td><code>AV:A/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H</code></td></tr>
+            <tr><td class="k">Puntuación</td><td><b>8.8 · Alta</b>, la calcula la app al elegir el vector.</td></tr>
+            <tr><td class="k">Evidencia</td><td>Captura del panel con la sesión iniciada, guardada en <code>~/CiberLab/loot/</code>.</td></tr>
+            <tr><td class="k">Recomendación</td><td>Cambiar la contraseña por una única y larga, desactivar la administración remota y actualizar el firmware.</td></tr>
+          </tbody>
+        </table></div>
+        <p>No todo necesita CVSS. «No hay copias de seguridad fuera de la oficina» es una severidad <b>media</b> por riesgo de negocio, aunque no sea una vulnerabilidad técnica.</p></div></li>
+      <li><div><p><b>Informe.</b> En la pestaña Informe exporta a Markdown o HTML. Incluye un resumen ejecutivo para el gerente (sin jerga), una tabla de hallazgos por severidad y el detalle técnico. Guárdalo en <code>~/CiberLab/informes/</code> y entrégalo cifrado.</p></div></li>
+      <li><div><p><b>Cierre.</b> Archiva la auditoría cuando el cliente confirme las correcciones (se mueve a la papelera; no se borra). Para una gran empresa el proceso es el mismo con más pasos en la checklist: segmentación, Active Directory, SIEM, proveedores y cumplimiento (ENS, ISO 27001, NIS2).</p></div></li>
+    </ol>
+    <details><summary>Práctica recomendada: audita tu propio laboratorio</summary><div>
+      <p>Crea la auditoría «Laboratorio casa», con alcance <code>192.168.56.0/24</code> y la autorización firmada por ti mismo. Escanea ms2, rellena la checklist y documenta cinco hallazgos con evidencia y CVSS. Exporta el informe. Es el mejor ejercicio para tu primer cliente real.</p>
+    </div></details>
+  </section>
+
+  <section id="plan">
+    <p class="eyebrow">Paso 10</p>
+    <h2>Plan de principiante a experto</h2>
+    <p class="intro">Un orden razonable dedicando de 5 a 8 horas por semana. Cada fase usa varios escritorios.</p>
+    <div class="plan">
+      <div class="phase"><div class="w">Semanas 1–3<small>Principiante</small></div><p>Escritorio 1 completo: Linux, redes TCP/IP, Bash. Escritorio 6 (redes) con Wireshark. Práctica: el reconocimiento de ms2 del Paso 4.</p></div>
+      <div class="phase"><div class="w">Semanas 4–6<small>Principiante +</small></div><p>Escritorios 3 y 4: OWASP Top 10 con DVWA y Juice Shop. Complementa con la PortSwigger Web Security Academy (gratis).</p></div>
+      <div class="phase"><div class="w">Semanas 7–9<small>Intermedio</small></div><p>Escritorio 5: la práctica de logs al 100 %, bastionado de un Ubuntu Server y un SIEM con Wazuh. Escritorio 7: seguridad de servidores y contenedores.</p></div>
+      <div class="phase"><div class="w">Semanas 10–12<small>Intermedio +</small></div><p>Escritorio 2: metodología completa de pentesting en las rutas guiadas de TryHackMe o HTB Academy. Primera auditoría completa de tu laboratorio.</p></div>
+      <div class="phase"><div class="w">Mes 4–6<small>Avanzado</small></div><p>Laboratorio de Active Directory (Windows Server + Windows 10), cloud (AWS/Azure) y auditorías de gran empresa. Certificación de entrada: eJPT o CompTIA Security+.</p></div>
+      <div class="phase"><div class="w">Mes 6+<small>Experto</small></div><p>OSCP, PNPT o CRTP según tu rama (ofensiva o AD); BTL1 o CySA+ para defensa. Primeras auditorías reales para pymes con contrato y seguro de responsabilidad civil.</p></div>
+    </div>
+  </section>
+
+  <section id="problemas">
+    <p class="eyebrow">Paso 11</p>
+    <h2>Salir, dónde están tus datos y problemas frecuentes</h2>
+    <h3>Salir del modo</h3>
+    <p>Vuelve a hacer clic en la calavera o pulsa el icono del modo normal (el monitor). Se cierran las ventanas y vuelve tu fondo de pantalla. Las VMs y los labs Docker siguen como los dejaste: apágalos desde el Laboratorio.</p>
+    <h3>Tus datos</h3>
+    <div class="tbl"><table>
+      <thead><tr><th>Ruta</th><th>Contenido</th></tr></thead>
+      <tbody>
+        <tr><td class="k">~/CiberLab/auditorias/</td><td>Cada auditoría en JSON (y <code>.papelera</code> con las archivadas).</td></tr>
+        <tr><td class="k">~/CiberLab/informes/</td><td>Informes exportados.</td></tr>
+        <tr><td class="k">~/CiberLab/loot/</td><td>Escaneos y evidencias del laboratorio.</td></tr>
+        <tr><td class="k">~/CiberLab/isos/</td><td>ISOs, OVAs e imágenes de VM.</td></tr>
+        <tr><td class="k">~/.local/share/ciberlab/</td><td>Progreso de las lecciones y apuntes.</td></tr>
+      </tbody>
+    </table></div>
+    <h3>Si algo falla</h3>
+    <details><summary>Las ventanas no se abren o salen en blanco</summary><div>
+      <div class="term"><div class="bar"><i></i><i></i><i></i><span>zsh</span></div><pre><span class="p">$ </span>cat $XDG_RUNTIME_DIR/ciberlab-server.log   <span class="c"># error del servidor</span>
+<span class="p">$ </span>ss -tlnp | grep 8766                         <span class="c"># ¿otro programa usa el puerto?</span>
+<span class="p">$ </span>ciberlab --stop && ciberlab                  <span class="c"># reiniciar</span></pre></div>
+    </div></details>
+    <details><summary>Una VM no recibe IP</summary><div>
+      <p>Comprueba en el Laboratorio que su red es «Host-only (vboxnet0)». Si reiniciaste el equipo y <code>vboxnet0</code> no aparece, pulsa <b>Crear red de laboratorio</b> otra vez o ejecuta <code>sudo modprobe vboxnetadp vboxnetflt</code>. Dentro de la VM, <code>sudo dhclient eth0</code> fuerza la petición de IP.</p>
+    </div></details>
+    <details><summary>Un lab Docker no arranca</summary><div>
+      <p>Mira el registro con el botón <b>Logs</b> de su tarjeta o con <code>docker logs ciberlab-dvwa</code>. Suele ser falta de espacio (<code>docker system df</code>) o que el servicio Docker esté parado.</p>
+    </div></details>
+    <details><summary>Quiero desinstalarlo</summary><div>
+      <div class="term"><div class="bar"><i></i><i></i><i></i><span>zsh</span></div><pre><span class="p">$ </span>ciberlab-mode off
+<span class="p">$ </span>cp -p ~/.config/bspwm/bin/EnvMode.bak-ciberlab ~/.config/bspwm/bin/EnvMode
+<span class="p">$ </span>rm ~/.local/bin/ciberlab ~/.local/bin/ciberlab-mode</pre></div>
+      <p>Tus auditorías en <code>~/CiberLab</code> no se tocan.</p>
+    </div></details>
+  </section>
+
+  </main>
+</div>
+
+<footer><div class="wrap">CiberLab · entorno de aprendizaje y auditoría para Arch + bspwm. Úsalo solo en tus sistemas o con autorización por escrito.</div></footer>
+</body>
+</html>
