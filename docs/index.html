@@ -124,6 +124,7 @@ details>div{padding:0 16px 12px}
 footer{border-top:1px solid var(--line);color:var(--mut);font-size:14px}
 footer .wrap{padding-block:24px 40px}
 </style>
+<script>try{var t=localStorage.getItem('cl-theme');if(t)document.documentElement.dataset.theme=t;}catch(e){}</script>
 </head>
 <body>
 
@@ -135,6 +136,8 @@ footer .wrap{padding-block:24px 40px}
     <a href="glosario.html" style="font:600 13px var(--mono);color:var(--tx2);text-decoration:none;padding:5px 9px">Glosario</a>
     <a href="comandos.html" style="font:600 13px var(--mono);color:var(--tx2);text-decoration:none;padding:5px 9px">Comandos</a>
     <a href="herramientas.html" style="font:600 13px var(--mono);color:var(--tx2);text-decoration:none;padding:5px 9px">Herramientas</a>
+    <span style="flex:1"></span>
+    <button id="theme" type="button" style="font:600 13px var(--mono);color:var(--tx2);background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:5px 10px;cursor:pointer">☾ Oscuro</button>
   </div>
 </nav>
 
@@ -468,5 +471,20 @@ nic2="none"</span></pre></div>
 </div>
 
 <footer><div class="wrap">CiberLab · entorno de aprendizaje y auditoría para Arch + bspwm. Úsalo solo en tus sistemas o con autorización por escrito.</div></footer>
+<script>
+(function(){
+  var btn=document.getElementById('theme');
+  if(!btn)return;
+  function cur(){return document.documentElement.dataset.theme || (matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');}
+  function label(){var d=cur()==='dark';btn.textContent=d?'☀ Claro':'☾ Oscuro';btn.setAttribute('aria-label',d?'Cambiar a modo claro':'Cambiar a modo oscuro');}
+  label();
+  btn.addEventListener('click',function(){
+    var t=cur()==='dark'?'light':'dark';
+    document.documentElement.dataset.theme=t;
+    try{localStorage.setItem('cl-theme',t);}catch(e){}
+    label();
+  });
+})();
+</script>
 </body>
 </html>

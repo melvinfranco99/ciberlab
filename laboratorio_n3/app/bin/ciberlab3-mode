@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+# ciberlab3-mode — entorno «Ciberseguridad N3 (avanzado)» (sin reiniciar)
+#   on | off | toggle | status (código 0 si activo)
+set -u
+SELF_DIR="$(dirname "$(readlink -f "$0")")"
+APP_DIR="$(readlink -f "$SELF_DIR/..")"
+STATE_DIR="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/ciberlab3-mode"
+PROFILE="${XDG_CONFIG_HOME:-$HOME/.config}/ciberlab3-browser"
+notify() { notify-send -a "CiberLab N3" -i "$APP_DIR/ciberlab3/static/logo.svg" "$1" "${2:-}" 2>/dev/null || true; }
+active() { [ -f "$STATE_DIR/active" ]; }
+
+wallpaper() {
+    local res w h svg="$STATE_DIR/wall.svg" png="$STATE_DIR/wall.png"
+    res=$(xrandr --current 2>/dev/null | awk '/\*/{print $1; exit}')
+    w=${res%x*}; h=${res#*x}
+    [[ "$w" =~ ^[0-9]+$ && "$h" =~ ^[0-9]+$ ]] || { w=1920; h=1080; }
+    python3 "$APP_DIR/branding/make_wallpaper.py" "$svg" "$w" "$h" N3 >/dev/null 2>&1 &&
+        rsvg-convert -w "$w" -h "$h" "$svg" -o "$png" 2>/dev/null && echo "$png"
+}
+
+on() {
+    # solo un nivel a la vez: si el N1 está activo, se apaga
+    command -v ciberlab-mode  >/dev/null && ciberlab-mode  status && ciberlab-mode  off
+    command -v ciberlab2-mode >/dev/null && ciberlab2-mode status && ciberlab2-mode off
+    if active; then "$APP_DIR/bin/ciberlab3" inicio; return; fi
+    mkdir -p "$STATE_DIR"
+    [ -f "$HOME/.fehbg" ] && cp -p "$HOME/.fehbg" "$STATE_DIR/fehbg.bak"
+    local wp; wp=$(wallpaper)
+    [ -n "$wp" ] && command -v feh >/dev/null && feh --no-fehbg --bg-fill "$wp"
+    touch "$STATE_DIR/active"
+    notify "Modo Ciberseguridad N3 activo" "1 ruta avanzada · 2 red/purple team · 3 AppSec · 4 Active Directory · 5 DFIR y hunting · 6 malware · 7 cloud y K8s · 8 laboratorio + auditorías"
+    "$APP_DIR/bin/ciberlab3" --escritorios
+}
+
+off() {
+    active || return 0
+    pkill -f -- "--user-data-dir=$PROFILE" 2>/dev/null
+    "$APP_DIR/bin/ciberlab3" --stop
+    if [ -f "$STATE_DIR/fehbg.bak" ]; then sh "$STATE_DIR/fehbg.bak" >/dev/null 2>&1; fi
+    rm -rf "$STATE_DIR"
+    notify "Modo Ciberseguridad N3 desactivado" "Ventanas cerradas y fondo restaurado. Las VMs y labs Docker siguen como los dejaste."
+}
+
+case "${1:-toggle}" in
+    on) on ;; off) off ;;
+    toggle) if active; then off; else on; fi ;;
+    status) active ;;
+    *) echo "Uso: $0 on|off|toggle|status" >&2; exit 1 ;;
+esac
