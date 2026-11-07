@@ -1,2 +1,7 @@
 __pycache__/
 *.pyc
+
+# Prácticas: datos generados y respuestas del alumno (regenerables)
+practicas/nivel*/*/datos/
+practicas/nivel*/*/respuestas.txt
+practicas/nivel*/*/.soluciones.json

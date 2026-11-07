@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Glosario de herramientas · CiberLab</title>
+<meta name="description" content="Las herramientas de ciberseguridad de CiberLab: qué es cada una, para qué sirve y cómo se instala en Arch.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;600;700&display=swap">
+<link rel="stylesheet" href="assets/site.css">
+<script>try{var t=localStorage.getItem('cl-theme');if(t)document.documentElement.dataset.theme=t;}catch(e){}</script>
+</head>
+<body>
+
+<nav class="topnav"><div class="wrap">
+  <a class="brand" href="index.html">Ciber<b>Lab</b></a>
+  <a class="l" href="index.html">Manual</a>
+  <a class="l" href="practicas.html">Prácticas y vídeos</a>
+  <a class="l" href="glosario.html">Glosario</a>
+  <a class="l" href="comandos.html">Comandos</a>
+  <a class="l on" href="herramientas.html">Herramientas</a>
+  <span class="sp"></span>
+  <button class="l" id="theme" type="button">☾ Oscuro</button>
+</div></nav>
+
+<header><div class="wrap">
+  <div class="prompt">melvin@arch:~$ ciberlab --herramientas</div>
+  <h1>🧰 Glosario de herramientas</h1>
+  <p class="lead">Las herramientas que usan las lecciones y las prácticas: qué es cada una, para qué sirve, cómo se instala en Arch y un ejemplo. Ordenadas de más a menos importante.</p>
+</div></header>
+
+<div class="wrap" style="padding-block:28px 80px">
+  <div class="gfilters">
+    <input id="gq" type="search" placeholder="Buscar herramienta o tarea (ej. nmap, logs, cloud)…" autocomplete="off">
+    <div class="fl" id="fn"><button data-v="0" class="on">N1 + N2</button><button data-v="1">Solo N1</button><button data-v="2">Solo N2</button></div>
+    <div class="fl" id="fcat"></div>
+    <span id="gcount"></span>
+  </div>
+  <div id="glist" data-kind="herramientas"></div>
+</div>
+
+<footer><div class="wrap">CiberLab · entorno de aprendizaje y auditoría. Úsalo solo en tus sistemas o con autorización por escrito.</div></footer>
+
+<script src="assets/herramientas.js"></script>
+<script src="assets/site.js"></script>
+</body>
+</html>

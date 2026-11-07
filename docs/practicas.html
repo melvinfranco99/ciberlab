@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Prácticas y vídeos · CiberLab</title>
+<meta name="description" content="12 prácticas de ciberseguridad autocorregibles en 4 niveles, con vídeos explicativos paso a paso, de principiante a experto.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;600;700&display=swap">
+<link rel="stylesheet" href="assets/site.css">
+<script>try{var t=localStorage.getItem('cl-theme');if(t)document.documentElement.dataset.theme=t;}catch(e){}</script>
+</head>
+<body>
+
+<nav class="topnav"><div class="wrap">
+  <a class="brand" href="index.html">Ciber<b>Lab</b></a>
+  <a class="l" href="index.html">Manual</a>
+  <a class="l on" href="practicas.html">Prácticas y vídeos</a>
+  <a class="l" href="glosario.html">Glosario</a>
+  <a class="l" href="comandos.html">Comandos</a>
+  <a class="l" href="herramientas.html">Herramientas</a>
+  <span class="sp"></span>
+  <button class="l" id="theme" type="button">☾ Oscuro</button>
+</div></nav>
+
+<header><div class="wrap">
+  <div class="prompt">melvin@arch:~$ ciberlab --practicas</div>
+  <h1>Prácticas con <b>vídeos</b> paso a paso</h1>
+  <p class="lead">12 laboratorios autocorregibles en 4 niveles, de principiante a experto. Cada uno genera sus propios datos y te corrige sin enseñarte la solución. Debajo tienes vídeos cortos que explican cómo se resuelven, con narración por voz opcional.</p>
+  <div class="facts"><span>4 niveles</span><span>12 prácticas</span><span>sin Internet</span><span>offline y seguro</span></div>
+</div></header>
+
+<div class="wrap grid">
+  <nav class="toc" aria-label="Índice">
+    <p>Índice</p>
+    <ol>
+      <li><a href="#empezar">Cómo funcionan</a></li>
+      <li><a href="#n1">Nivel 1 · Principiante</a></li>
+      <li><a href="#n2">Nivel 2 · Intermedio</a></li>
+      <li><a href="#n3">Nivel 3 · Avanzado</a></li>
+      <li><a href="#n4">Nivel 4 · Experto</a></li>
+      <li><a href="#descargar">Descargar y ejecutar</a></li>
+    </ol>
+  </nav>
+  <main>
+
+  <section id="empezar">
+    <p class="eyebrow">Empieza aquí</p>
+    <h2>Cómo funciona una práctica</h2>
+    <p class="intro">Generas los datos, investigas con la terminal, escribes tus respuestas y el programa te puntúa. Este vídeo lo muestra entero en un minuto.</p>
+    <div class="video"><h4>Cómo hacer una práctica de CiberLab</h4><div data-video="intro"></div></div>
+    <div class="note"><b class="h">Seguro por diseño</b>Todo es material defensivo y educativo: logs, configuraciones y muestras <b>inertes</b> creadas para el ejercicio. Nada se ejecuta, se descarga ni ataca a terceros. Úsalo solo en tu equipo.</div>
+  </section>
+
+  <section id="n1">
+    <p class="eyebrow">Nivel 1</p>
+    <h2>Principiante — primeros reflejos</h2>
+    <p class="intro">Moverte por Linux, leer logs y entender hashes y codificaciones. La base de todo lo demás.</p>
+    <div class="tbl"><table>
+      <thead><tr><th>Práctica</th><th>Qué aprendes</th></tr></thead>
+      <tbody>
+        <tr><td class="k">01-linux-pistas</td><td>Ficheros ocultos, permisos peligrosos, SUID y secretos olvidados con <code>find</code> y <code>grep</code>.</td></tr>
+        <tr><td class="k">02-fuerza-bruta-ssh</td><td>Separar un ataque real del ruido de bots en <code>auth.log</code>.</td></tr>
+        <tr><td class="k">03-hashes-codificacion</td><td>Verificar integridad (SHA256SUMS) y descifrar Base64, hex y ROT13.</td></tr>
+      </tbody>
+    </table></div>
+    <div class="video"><h4>Detectar un ataque de fuerza bruta en auth.log</h4><div data-video="n1-fuerzabruta"></div></div>
+  </section>
+
+  <section id="n2">
+    <p class="eyebrow">Nivel 2</p>
+    <h2>Intermedio — ver lo que otros no ven</h2>
+    <p class="intro">Interpretar escaneos, auditar un cortafuegos y cazar amenazas en el tráfico de red.</p>
+    <div class="tbl"><table>
+      <thead><tr><th>Práctica</th><th>Qué aprendes</th></tr></thead>
+      <tbody>
+        <tr><td class="k">01-informe-nmap</td><td>Leer un escaneo <code>nmap</code>, identificar servicios vulnerables y priorizar.</td></tr>
+        <tr><td class="k">02-reglas-firewall</td><td>Encontrar reglas demasiado abiertas y errores de orden en un cortafuegos.</td></tr>
+        <tr><td class="k">03-trafico-pcap</td><td>Cazar una baliza C2 (beaconing) y una exfiltración entre miles de conexiones.</td></tr>
+      </tbody>
+    </table></div>
+    <div class="video"><h4>Cazar una baliza y una fuga de datos en el tráfico</h4><div data-video="n2-trafico"></div></div>
+  </section>
+
+  <section id="n3">
+    <p class="eyebrow">Nivel 3</p>
+    <h2>Avanzado — pensar como un analista</h2>
+    <p class="intro">Reconstruir ataques en eventos de Windows, bastionar servidores y entender por qué la cripto débil no sirve.</p>
+    <div class="tbl"><table>
+      <thead><tr><th>Práctica</th><th>Qué aprendes</th></tr></thead>
+      <tbody>
+        <tr><td class="k">01-eventos-windows</td><td>Reconstruir movimiento lateral con los EventID 4624/4625/4688/4769/4720/4728.</td></tr>
+        <tr><td class="k">02-bastionado</td><td>Aplicar un baseline CIS a <code>sshd_config</code>, <code>sysctl</code> y permisos.</td></tr>
+        <tr><td class="k">03-cripto-debil</td><td>Romper César, XOR y MD5 sin sal para entender qué usar (Argon2).</td></tr>
+      </tbody>
+    </table></div>
+    <div class="video"><h4>Reconstruir un ataque en los eventos de Windows</h4><div data-video="n3-windows"></div></div>
+  </section>
+
+  <section id="n4">
+    <p class="eyebrow">Nivel 4</p>
+    <h2>Experto — unir todas las piezas</h2>
+    <p class="intro">Investigar un incidente correlacionando varias fuentes, diseñar detecciones y hacer triaje de artefactos.</p>
+    <div class="tbl"><table>
+      <thead><tr><th>Práctica</th><th>Qué aprendes</th></tr></thead>
+      <tbody>
+        <tr><td class="k">01-incidente-completo</td><td>Cruzar proxy, EDR, autenticación y red en una línea temporal mapeada a MITRE ATT&CK.</td></tr>
+        <tr><td class="k">02-ingenieria-deteccion</td><td>Escribir detecciones por comportamiento y medir verdaderos/falsos positivos (Sigma).</td></tr>
+        <tr><td class="k">03-malware-estatico</td><td>Triaje estático de un artefacto inerte: cadenas, IoC, Base64 y persistencia.</td></tr>
+      </tbody>
+    </table></div>
+    <div class="video"><h4>Investigación de incidente de principio a fin</h4><div data-video="n4-incidente"></div></div>
+  </section>
+
+  <section id="descargar">
+    <p class="eyebrow">Manos a la obra</p>
+    <h2>Descargar y ejecutar</h2>
+    <p>Las prácticas están en la carpeta <code>practicas/</code> del repositorio. Solo necesitas Python 3.</p>
+    <div class="term"><div class="bar"><i></i><i></i><i></i><span>zsh</span></div><pre><span class="p">$ </span>cd practicas/nivel1-principiante/02-fuerza-bruta-ssh
+<span class="p">$ </span>python3 generar.py            <span class="c"># crea datos/ y respuestas.txt</span>
+<span class="p">$ </span>nano respuestas.txt           <span class="c"># escribe tus respuestas</span>
+<span class="p">$ </span>python3 comprobar.py          <span class="c"># te puntúa</span>
+<span class="p">$ </span>python3 comprobar.py --pistas <span class="c"># si te atascas (no da la solución)</span></pre></div>
+    <p class="intro">¿Una palabra no te suena? Búscala en el <a href="glosario.html">Glosario</a>. ¿No recuerdas un comando o una herramienta? Están en <a href="comandos.html">Comandos</a> y <a href="herramientas.html">Herramientas</a>.</p>
+  </section>
+
+  </main>
+</div>
+
+<footer><div class="wrap">CiberLab · entorno de aprendizaje y auditoría para Arch + bspwm. Úsalo solo en tus sistemas o con autorización por escrito.</div></footer>
+
+<script src="assets/videos.js"></script>
+<script src="assets/site.js"></script>
+</body>
+</html>
