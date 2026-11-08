@@ -51,4 +51,48 @@ El cifrado **RC4 (0x17)** en estos tickets es la señal que el Blue Team caza (l
   challenge: 'En GOAD, consigue por Kerberoasting el hash de una cuenta de servicio, crackéalo y úsalo para avanzar. Luego escribe la detección Sigma que lo habría cazado (reutiliza lo del N2).',
   refs: [['The Hacker Recipes · Kerberos', 'https://www.thehacker.recipes/ad/movement/kerberos/'], ['Impacket', 'https://github.com/fortra/impacket'], ['MITRE T1558', 'https://attack.mitre.org/techniques/T1558/']] },
 ]},
+{ name: 'Maestría', lessons: [
+{ id: 'ad-03', t: 'AD CS: abuso de plantillas de certificado (ESC1/ESC8)', min: 80, labs: ['vm'],
+  obj: ['Entender por qué los servicios de certificados son una vía directa a Domain Admin', 'Reconocer plantillas mal configuradas (ESC1) y relay a la CA (ESC8)', 'Usar Certipy para auditar y abusar en el laboratorio'],
+  theory: `**AD CS** (Active Directory Certificate Services) emite certificados. Si está mal configurado, un usuario normal obtiene un certificado que lo **suplanta** como Domain Admin. Son los ataques **ESCx** (SpecterOps):
+
+| Caso | Mala configuración | Efecto |
+|---|---|---|
+| **ESC1** | Plantilla que permite indicar el *subject* (SAN) y autenticación | Pides un cert «a nombre de» Administrador |
+| **ESC8** | Endpoint web de inscripción (HTTP) sin protección | Relay de NTLM a la CA → cert de la víctima |
+| **ESC2/3/4…** | Permisos y EKUs peligrosos | Variantes del mismo problema |
+
+El certificado sirve para autenticarse por Kerberos (PKINIT) y, de ahí, obtener el TGT/hash de la cuenta suplantada. **Certipy** encuentra las plantillas vulnerables (\`find\`) y realiza el abuso en el laboratorio.`,
+  steps: [
+    ['Audita la CA y las plantillas', 'certipy find -u usuario@corp.local -p "Primavera2026!" -dc-ip 192.168.59.10 -vulnerable', 'Certipy marca las plantillas vulnerables (ESC1…). Esto es también la herramienta del defensor para encontrarlas antes.'],
+    ['ESC1: solicita un cert suplantando', 'certipy req -u usuario@corp.local -p "..." -ca CORP-CA -template Vuln -upn administrator@corp.local', 'Si la plantilla permite SAN arbitrario, pides un certificado a nombre del administrador del dominio.'],
+    ['Autentícate con el certificado', 'certipy auth -pfx administrator.pfx -dc-ip 192.168.59.10', 'El cert te da el TGT/hash de la cuenta suplantada: control del dominio por una plantilla mal puesta.'],
+    ['Documenta la cadena', '', 'En el informe: «una plantilla de certificado permitía a cualquier usuario autenticarse como Domain Admin». Impacto crítico, remediación concreta.'],
+  ],
+  defense: 'Audita AD CS con Certipy/PSPKIAudit, quita el SAN arbitrario de las plantillas, requiere aprobación del gestor, deshabilita la inscripción web por HTTP o fuerza EPA/firmado, y monitoriza la emisión de certificados con EKU de autenticación para cuentas inesperadas.',
+  quiz: [['ESC1 permite a un usuario normal…', ['Apagar la CA', 'Pedir un certificado a nombre de otra cuenta (p. ej. Domain Admin)', 'Nada'], 1, 'Si la plantilla deja indicar el SAN, pides un cert que te suplanta como admin.'],
+         ['¿Qué herramienta audita y abusa de AD CS?', ['nmap', 'Certipy', 'tcpdump'], 1, 'Certipy encuentra plantillas vulnerables y realiza el abuso (y la auditoría defensiva).']],
+  challenge: 'En GOAD (o un AD CS de laboratorio), usa `certipy find -vulnerable` para localizar una plantilla ESC1 y demuestra la suplantación. Escribe la remediación exacta de esa plantilla.',
+  refs: [['Certipy', 'https://github.com/ly4k/Certipy'], ['SpecterOps · Certified Pre-Owned', 'https://posts.specterops.io/certified-pre-owned-d95910965cd2'], ['The Hacker Recipes · ADCS', 'https://www.thehacker.recipes/ad/movement/adcs/']] },
+{ id: 'ad-04', t: 'Coerción y NTLM relay: Shadow Credentials y camino al DC', min: 80, labs: ['vm'],
+  obj: ['Entender la autenticación forzada (coerción) y el relay de NTLM', 'Reconocer por qué firmar SMB/LDAP lo frena', 'Conocer Shadow Credentials como alternativa moderna'],
+  theory: `Muchos caminos a Domain Admin no crackean nada: **reutilizan autenticación** de otra máquina.
+
+- **Coerción**: obligas a un servidor (o al propio DC) a **autenticarse contra ti** (PetitPotam, PrinterBug, DFSCoerce). No necesitas su contraseña: viene él solo.
+- **NTLM relay**: reenvías esa autenticación a **otro servicio** que la acepta (LDAP del DC, la CA de ESC8). Si el destino no exige **firma/sellado**, actúas como la máquina coaccionada.
+- **Shadow Credentials**: si tienes permiso de escritura sobre el atributo \`msDS-KeyCredentialLink\` de una cuenta, le añades una clave y te autenticas como ella por PKINIT. Alternativa limpia al reseteo de contraseña.
+
+La defensa central es **exigir firma** (SMB signing, LDAP signing + channel binding) y quitar permisos de escritura peligrosos.`,
+  steps: [
+    ['Monta el receptor de relay', 'impacket-ntlmrelayx -t ldap://192.168.59.10 --no-dump', 'Queda a la espera de autenticaciones para reenviarlas al LDAP del DC. En el lab, con objetivos sin firma obligatoria.'],
+    ['Fuerza la autenticación (coerción)', '', 'Con una herramienta de coerción (PetitPotam/Coercer) obligas a un servidor a autenticarse contra tu ntlmrelayx. Documenta qué máquina respondió.'],
+    ['Shadow Credentials (si tienes el permiso)', 'certipy shadow auto -u usuario@corp.local -p "..." -account victima', 'Si BloodHound mostró que puedes escribir en la cuenta `victima`, le añades una KeyCredential y te autenticas como ella.'],
+    ['Valida el impacto', '', 'El resultado típico: credenciales/privilegios de una cuenta de equipo o de servicio que acerca al control del dominio. Anótalo para el informe.'],
+  ],
+  defense: 'Obliga a firmar SMB y LDAP (+ channel binding/EPA), aplica el parche de PetitPotam, restringe quién puede escribir `msDS-KeyCredentialLink`, usa cuentas tier-0 separadas y detecta autenticaciones de máquina hacia hosts raros (señal de coerción+relay).',
+  quiz: [['¿Qué frena de raíz el NTLM relay a LDAP?', ['Cambiar el puerto', 'Exigir firma/sellado (LDAP signing + channel binding)', 'Apagar el DNS'], 1, 'Si el destino exige firma, la autenticación reenviada no sirve.'],
+         ['La coerción (PetitPotam, PrinterBug) consigue que…', ['El atacante adivine la contraseña', 'Un servidor se autentique solo contra el atacante', 'El DC se reinicie'], 1, 'Fuerza al objetivo a autenticarse contra ti, sin necesitar su contraseña.']],
+  challenge: 'En el laboratorio, demuestra una cadena coerción→relay a LDAP (con firma desactivada) o una Shadow Credential sobre una cuenta que puedas escribir. Explica la mitigación que la rompe.',
+  refs: [['The Hacker Recipes · NTLM relay', 'https://www.thehacker.recipes/ad/movement/ntlm/relay'], ['PetitPotam / coercion', 'https://www.thehacker.recipes/ad/movement/mitm-and-coerced-authentications'], ['Shadow Credentials', 'https://posts.specterops.io/shadow-credentials-abusing-key-trust-account-mapping-for-takeover-8ee1a53566ab']] },
+]},
 ]};

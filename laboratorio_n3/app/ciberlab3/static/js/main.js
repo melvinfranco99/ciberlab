@@ -31,7 +31,7 @@ function searchIndex() {
   const idx = [];
   for (const l of CL.lessons()) {
     const a = CL.areas[l.area];
-    idx.push({ t: l.t, where: `${a.title} · ${CL.LEVELS[l.level]}`, href: `#/${l.area}/${l.id}`,
+    idx.push({ t: l.t, where: `${a.title} · ${a.levels[l.level]?.name || CL.LEVELS[l.level]}`, href: `#/${l.area}/${l.id}`,
       txt: [l.t, l.theory, (l.steps || []).map(s => s.join(' ')).join(' '), l.defense, (l.obj || []).join(' ')].join(' ').toLowerCase() });
   }
   for (const v of CL.vulns)
@@ -99,6 +99,7 @@ CL.homeView = async (wrap) => {
     postexp: 'Command & Control, movimiento lateral, recolección de credenciales e impacto reversible.',
     evasion: 'LOLBins, firmas vs. comportamiento y OPSEC — con el foco en cómo se detecta cada cosa.',
     webexp: 'SSRF, SSTI y deserialización insegura: cadenas de fallos hasta RCE en labs creados para ello.',
+    nube: 'Ofensiva en AWS (IAM, metadatos) y Kubernetes (RBAC, tokens, pods privilegiados), con su defensa.',
     lab: 'Redes CORP + DMZ aisladas, dominio AD vulnerable (GOAD) y objetivos Docker para practicar.',
     auditorias: 'Informe de pentest: hallazgos con CVSS, narrativa del ataque, impacto y remediación.',
     glosario: 'Todas las definiciones de N1–N3 con ejemplos.', comandos: 'Cada comando de las prácticas, por nivel e importancia.',

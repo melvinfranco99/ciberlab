@@ -23,6 +23,7 @@ CL.PROGRAMS = [
   { id: 'postexp',    icon: '󰇄', emo: '🛰️', name: 'Post-explotación y C2',  desk: 6, c: '#22d3ee' },
   { id: 'evasion',    icon: '󰗹', emo: '🥷', name: 'Evasión y OPSEC',         desk: 6, c: '#38bdf8' },
   { id: 'webexp',     icon: '󰖟', emo: '🕸️', name: 'Explotación web avanzada', desk: 7, c: '#a855f7' },
+  { id: 'nube',       icon: '󰅟', emo: '☁️', name: 'Nube y contenedores',   desk: 7, c: '#818cf8' },
   { id: 'lab',        icon: '󰍛', emo: '🧪', name: 'Laboratorio N3',          desk: 8, c: '#ff2e63' },
   { id: 'auditorias', icon: '󰈙', emo: '📋', name: 'Informe de pentest',      desk: 8, c: '#e5e7eb' },
   { id: 'glosario',   icon: '󰗚', emo: '📖', name: 'Glosario',                desk: 1, c: '#93a4b5' },

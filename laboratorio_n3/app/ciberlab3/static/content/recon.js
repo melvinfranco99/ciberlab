@@ -55,4 +55,50 @@ Cada elección deja huella distinta: un *SYN scan* (\`-sS\`) es más silencioso 
   challenge: 'Escanea la DMZ del lab de dos formas (`-T2 -sS` frente a `-T5`) con Suricata escuchando. Compara qué alertas genera cada una: esa es la diferencia entre sigilo y ruido.',
   refs: [['Nmap reference', 'https://nmap.org/book/man.html'], ['The Hacker Recipes · Recon', 'https://www.thehacker.recipes/'], ['RustScan', 'https://github.com/RustScan/RustScan']] },
 ]},
+{ name: 'Profundización', lessons: [
+{ id: 'rec-03', t: 'Descubrimiento de contenido y virtual hosts: lo que no está enlazado', min: 60, labs: ['web'],
+  obj: ['Encontrar rutas, ficheros y parámetros ocultos con fuzzing', 'Descubrir virtual hosts (webs distintas en la misma IP)', 'Elegir diccionarios y filtrar el ruido de respuestas'],
+  theory: `Casi todo el contenido interesante de una web **no está enlazado**: paneles de administración, copias (\`.bak\`, \`.old\`), ficheros de configuración, endpoints de API, entornos de pruebas. Se encuentran por **fuerza bruta de rutas** (fuzzing) con un buen diccionario.
+
+| Técnica | Qué busca | Herramienta |
+|---|---|---|
+| Fuzzing de rutas | /admin, /backup, /.git | ffuf, feroxbuster |
+| Fuzzing recursivo | directorios dentro de directorios | feroxbuster (recursión) |
+| Virtual hosts | webs servidas por cabecera Host | ffuf con -H "Host: FUZZ.sitio" |
+| Parámetros ocultos | ?debug=, ?admin= | ffuf, Arjun, param-miner |
+| Extensiones | .php, .bak, .zip | ffuf -e |
+
+La clave es **filtrar**: una web que responde 200 a todo necesita filtrar por tamaño (\`-fs\`) o palabras (\`-fw\`); si responde 404 estándar, filtras por código (\`-mc\`).`,
+  steps: [
+    ['Fuzzing de rutas con filtro', 'ffuf -u http://127.0.0.1:8221/FUZZ -w /usr/share/seclists/Discovery/Web-Content/raft-medium-directories.txt -mc 200,301,302,403', 'Usa SecLists (el estándar de diccionarios). Contra DVWA del lab aparecerán /login.php, /setup.php, etc.'],
+    ['Recursivo y con extensiones', 'feroxbuster -u http://127.0.0.1:8220 -x php,txt,bak -d 2', 'feroxbuster entra en los directorios que encuentra. `-x` prueba extensiones; `.bak`/`.old` filtran código fuente con credenciales.'],
+    ['Descubre virtual hosts', 'ffuf -u http://sitio -H "Host: FUZZ.sitio" -w subdominios.txt -fs 0', 'Si el mismo servidor sirve webs distintas por la cabecera Host, un vhost oculto (dev, staging) suele ser menos seguro.'],
+    ['Busca parámetros ocultos', 'ffuf -u "http://sitio/pagina?FUZZ=1" -w params.txt -fw 42', 'Un parámetro como `?debug=1` o `?admin=true` puede cambiar por completo el comportamiento de la página.'],
+  ],
+  defense: 'No confíes en que algo «no esté enlazado»: elimina backups y ficheros temporales del docroot, protege /admin con autenticación y red, bloquea el acceso a .git/.env, y vigila en los logs los picos de 404 (señal de fuzzing, como en la práctica de logs del N2).',
+  quiz: [['Encuentras que la web responde 200 a cualquier ruta. ¿Cómo distingues lo real?', ['No se puede', 'Filtrando por tamaño o número de palabras de la respuesta (-fs/-fw)', 'Escaneando puertos'], 1, 'Las respuestas falsas suelen tener el mismo tamaño: se filtran con -fs/-fw.'],
+         ['¿Qué revela el fuzzing de virtual hosts?', ['Puertos abiertos', 'Webs distintas servidas por la misma IP según la cabecera Host', 'Usuarios del sistema'], 1, 'Un mismo servidor puede alojar varios sitios seleccionados por el Host; algunos ocultos y vulnerables.']],
+  challenge: 'Contra Juice Shop y DVWA del laboratorio, descubre con ffuf/feroxbuster al menos cinco rutas no enlazadas y un parámetro oculto. Documenta el diccionario y los filtros usados.',
+  refs: [['SecLists', 'https://github.com/danielmiessler/SecLists'], ['feroxbuster', 'https://github.com/epi052/feroxbuster'], ['ffuf', 'https://github.com/ffuf/ffuf']] },
+{ id: 'rec-04', t: 'Enumeración de API y toma de huella de tecnología', min: 55, labs: ['web'],
+  obj: ['Descubrir y leer la especificación de una API (Swagger/OpenAPI)', 'Identificar tecnología y versión por huellas sutiles', 'Lanzar comprobaciones conocidas con nuclei de forma dirigida'],
+  theory: `Las aplicaciones modernas son **API + front**. La API suele documentarse sola:
+
+- **Swagger / OpenAPI** en \`/swagger\`, \`/api-docs\`, \`/openapi.json\`: te da **todos** los endpoints, parámetros y métodos. Un regalo para el pentester.
+- **Huella de tecnología**: cabeceras (\`Server\`, \`X-Powered-By\`), cookies (\`PHPSESSID\`, \`JSESSIONID\`), el **hash del favicon** (identifica el producto exacto), rutas típicas de cada framework.
+- **nuclei**: miles de plantillas de la comunidad para comprobar fallos **conocidos**; úsalo dirigido (por tags y severidad), no a ciegas.
+
+La toma de huella decide el resto del ataque: no es lo mismo una API Node con JWT que un panel PHP antiguo.`,
+  steps: [
+    ['Busca la especificación de la API', 'ffuf -u http://127.0.0.1:8223/FUZZ -w api-endpoints.txt -mc 200', 'VAmPI expone sus endpoints; busca `/openapi.json` o `/swagger`. Con la spec tienes el mapa completo de la API.'],
+    ['Toma de huella', 'httpx -u http://sitio -title -tech-detect -favicon', 'El `-favicon` calcula el hash del icono: en bases como Shodan identifica el producto y versión exactos.'],
+    ['Comprobaciones conocidas dirigidas', 'nuclei -u http://127.0.0.1:8220 -tags exposure,misconfig -severity medium,high', 'Dirígelo por tags: busca exposiciones y malas configuraciones, no 5000 plantillas irrelevantes.'],
+    ['Prioriza por la huella', '', 'Una versión concreta + un CVE conocido + endpoint sensible = primer objetivo. Anótalo con su evidencia.'],
+  ],
+  defense: 'No publiques la especificación de la API en producción, elimina cabeceras que revelan versión, mantén el software parcheado (nuclei comprueba justo lo que un atacante probaría) y pon límites de tasa en los endpoints de la API.',
+  quiz: [['¿Por qué es valiosa una ruta /swagger o /openapi.json expuesta?', ['No lo es', 'Documenta todos los endpoints y parámetros de la API', 'Cifra el tráfico'], 1, 'La especificación da el mapa completo de la API, incluidos endpoints no enlazados.'],
+         ['¿Cómo deberías usar nuclei contra un objetivo?', ['Todas las plantillas a la vez, siempre', 'Dirigido por tags y severidad según la huella', 'Nunca'], 1, 'Dirigirlo reduce ruido y falsos positivos y va a lo que de verdad aplica.']],
+  challenge: 'Enumera la API de VAmPI desde su especificación y prepara en Burp una colección de peticiones a sus endpoints. Toma la huella de Juice Shop por el hash del favicon.',
+  refs: [['nuclei templates', 'https://github.com/projectdiscovery/nuclei-templates'], ['httpx', 'https://github.com/projectdiscovery/httpx'], ['OWASP API Security Top 10', 'https://owasp.org/API-Security/']] },
+]},
 ]};

@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Nivel 3 · Ofensiva y Red Team · CiberLab</title>
+<meta name="description" content="CiberLab N3: laboratorio de ciberseguridad ofensiva (Red Team) por fases, con vídeos explicativos paso a paso, de reconocimiento a post-explotación. Solo uso autorizado.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;600;700&display=swap">
+<link rel="stylesheet" href="assets/site.css">
+<script>try{var t=localStorage.getItem('cl-theme');if(t)document.documentElement.dataset.theme=t;}catch(e){}</script>
+<style>body.n3-accent{--acc:#ff2e63;--acc-soft:rgba(255,46,99,.11)}</style>
+</head>
+<body class="n3-accent">
+
+<nav class="topnav"><div class="wrap">
+  <a class="brand" href="index.html">Ciber<b>Lab</b></a>
+  <a class="l" href="index.html">Manual</a>
+  <a class="l" href="practicas.html">Prácticas y vídeos</a>
+  <a class="l on" href="n3.html">Nivel 3 · Ofensiva</a>
+  <a class="l" href="glosario.html">Glosario</a>
+  <a class="l" href="comandos.html">Comandos</a>
+  <a class="l" href="herramientas.html">Herramientas</a>
+  <span class="sp"></span>
+  <button class="l" id="theme" type="button">☾ Oscuro</button>
+</div></nav>
+
+<header><div class="wrap">
+  <div class="prompt">melvin@arch:~$ ciberlab3 --ayuda</div>
+  <h1>Nivel 3 · Ofensiva y <b>Red Team</b></h1>
+  <p class="lead">El tercer laboratorio de CiberLab, para cuando ya dominas el N1 y el N2. Aquí operas como un equipo ofensivo: encadenas técnicas a lo largo de la <b>cadena de ataque</b> —reconocimiento, acceso, escalada, Active Directory, post-explotación, evasión, web y nube— hasta el objetivo, y demuestras el impacto. Con vídeos paso a paso y, en cada técnica, su detección y mitigación.</p>
+  <div class="facts"><span>9 áreas</span><span>33 lecciones</span><span>22 técnicas ATT&CK</span><span>6 vídeos</span><span>solo uso autorizado</span></div>
+</div></header>
+
+<div class="wrap grid">
+  <nav class="toc" aria-label="Índice">
+    <p>Índice</p>
+    <ol>
+      <li><a href="#que">Qué es el N3</a></li>
+      <li><a href="#metodo">Método y laboratorio</a></li>
+      <li><a href="#recon">Reconocimiento</a></li>
+      <li><a href="#acceso">Acceso inicial</a></li>
+      <li><a href="#ad">Active Directory</a></li>
+      <li><a href="#postexp">Post-explotación</a></li>
+      <li><a href="#web">Web y nube</a></li>
+      <li><a href="#areas">Las 9 áreas</a></li>
+      <li><a href="#instalar">Instalar y ejecutar</a></li>
+    </ol>
+  </nav>
+  <main>
+
+  <section id="que">
+    <p class="eyebrow">Presentación</p>
+    <h2>Qué es el Nivel 3</h2>
+    <p class="intro">Una aplicación local (como el N1 y el N2) con un escritorio por fase de la cadena de ataque. El contenido es de nivel experto y <b>práctico</b>: cada lección tiene teoría, pasos reproducibles en tu laboratorio, un reto y referencias.</p>
+    <div class="warn"><b>⛔ Legal y ética</b>Todo el material es formativo y de <b>uso autorizado</b>: se practica solo en tu laboratorio aislado, en plataformas creadas para ello (HTB, TryHackMe, VulnLab, PortSwigger) o contra sistemas de un cliente con contrato, alcance y reglas de enfrentamiento firmadas. Atacar sistemas sin permiso es un delito. El sigilo se usa para medir la detección, nunca para ocultar nada al cliente.</div>
+    <h3>La cadena de ataque</h3>
+    <div class="desks">
+      <div class="desk"><div class="n">1</div><div class="t">Método</div><div class="d">PTES/ATT&CK, alcance y RoE</div></div>
+      <div class="desk"><div class="n">2</div><div class="t">Reconocimiento</div><div class="d">OSINT, enumeración, escaneo</div></div>
+      <div class="desk"><div class="n">3</div><div class="t">Acceso inicial</div><div class="d">servicio, spraying, phishing</div></div>
+      <div class="desk"><div class="n">4</div><div class="t">Escalada</div><div class="d">Linux y Windows a root/SYSTEM</div></div>
+      <div class="desk"><div class="n">5</div><div class="t">Active Directory</div><div class="d">BloodHound, Kerberos, ADCS</div></div>
+      <div class="desk"><div class="n">6</div><div class="t">Post-explotación</div><div class="d">C2, pivoting, persistencia</div></div>
+      <div class="desk"><div class="n">6</div><div class="t">Evasión y OPSEC</div><div class="d">AMSI/ETW, canales, su detección</div></div>
+      <div class="desk"><div class="n">7</div><div class="t">Web y nube</div><div class="d">SSRF, JWT, IAM, Kubernetes</div></div>
+    </div>
+  </section>
+
+  <section id="metodo">
+    <p class="eyebrow">Fase 0</p>
+    <h2>Método y laboratorio</h2>
+    <p class="intro">Antes de atacar se acuerda: alcance, ventana, objetivos y prohibiciones. Y se monta un laboratorio aislado con Kali y un dominio vulnerable. Este vídeo lo resume.</p>
+    <div class="video"><h4>Cómo opera un Red Team y cómo montar el laboratorio</h4><div data-video="n3-intro"></div></div>
+  </section>
+
+  <section id="recon">
+    <p class="eyebrow">Fase 1</p>
+    <h2>Reconocimiento: de fuera hacia dentro</h2>
+    <p class="intro">Primero pasivo (sin tocar al objetivo), luego activo con criterio. Descubrir subdominios, servicios y contenido oculto.</p>
+    <div class="video"><h4>Reconocimiento pasivo y activo paso a paso</h4><div data-video="n3-recon"></div></div>
+  </section>
+
+  <section id="acceso">
+    <p class="eyebrow">Fase 2</p>
+    <h2>Acceso inicial</h2>
+    <p class="intro">El primer punto de apoyo por servicio vulnerable, credenciales o persona. Aquí, <em>password spraying</em> responsable (sin bloquear cuentas).</p>
+    <div class="video"><h4>Password spraying autorizado, con sigilo</h4><div data-video="n3-acceso"></div></div>
+  </section>
+
+  <section id="ad">
+    <p class="eyebrow">Fase 3</p>
+    <h2>Active Directory: de usuario a Domain Admin</h2>
+    <p class="intro">El corazón de casi toda intrusión corporativa. Con una credencial, BloodHound dibuja el camino; Kerberos hace el resto.</p>
+    <div class="video"><h4>BloodHound y Kerberoasting en el dominio</h4><div data-video="n3-ad"></div></div>
+  </section>
+
+  <section id="postexp">
+    <p class="eyebrow">Fase 4</p>
+    <h2>Post-explotación: moverse y mantenerse</h2>
+    <p class="intro">Pivotar a redes internas, mando y control (C2) y persistencia reversible. Demostrar el impacto sin causar daño.</p>
+    <div class="video"><h4>Pivoting, túneles y C2 (y su detección)</h4><div data-video="n3-postexp"></div></div>
+  </section>
+
+  <section id="web">
+    <p class="eyebrow">Fase 5</p>
+    <h2>Explotación web avanzada y nube</h2>
+    <p class="intro">Más allá del Top 10 básico: cadenas de fallos. Una SSRF que llega a los metadatos de la nube se vuelve crítica.</p>
+    <div class="video"><h4>De una SSRF a credenciales de la nube</h4><div data-video="n3-web"></div></div>
+  </section>
+
+  <section id="areas">
+    <p class="eyebrow">Contenido</p>
+    <h2>Las 9 áreas y lo que practicas</h2>
+    <div class="tbl"><table>
+      <thead><tr><th>Área</th><th>Temas (prácticos)</th></tr></thead>
+      <tbody>
+        <tr><td class="k">Ruta y método</td><td>PTES/OSSTMM/ATT&CK, reglas de enfrentamiento, montaje del laboratorio, bucle del operador.</td></tr>
+        <tr><td class="k">Reconocimiento</td><td>OSINT y huella externa, escaneo con criterio, descubrimiento de contenido y vhosts, enumeración de API.</td></tr>
+        <tr><td class="k">Acceso inicial</td><td>explotación de servicios, password spraying, phishing simulado (GoPhish), webshell/LFI y secretos en repos.</td></tr>
+        <tr><td class="k">Escalada de privilegios</td><td>Linux (SUID, sudo, cron, GTFOBins), Windows (tokens, servicios), escapes de contenedor, pillaje de credenciales.</td></tr>
+        <tr><td class="k">Active Directory</td><td>BloodHound, Kerberoasting y AS-REP, delegación, AD CS (ESC1/ESC8), coerción y NTLM relay, Shadow Credentials.</td></tr>
+        <tr><td class="k">Post-explotación y C2</td><td>mando y control, movimiento lateral, pivoting y túneles, persistencia y su detección.</td></tr>
+        <tr><td class="k">Evasión y OPSEC</td><td>LOLBins, firma vs. comportamiento, AMSI/ETW y logging, canales encubiertos (DNS/HTTPS) y cómo detectarlos.</td></tr>
+        <tr><td class="k">Explotación web</td><td>SSRF, SSTI, deserialización, JWT e IDOR/BOLA, traversal, request smuggling, cadenas hasta RCE.</td></tr>
+        <tr><td class="k">Nube y contenedores</td><td>IAM de AWS y escalada, metadatos, Kubernetes (RBAC, tokens de pod, pods privilegiados).</td></tr>
+      </tbody>
+    </table></div>
+    <p class="intro">Cada técnica ofensiva termina con su <b>detección y mitigación</b>: el N3 te enseña a atacar para que sepas defender.</p>
+  </section>
+
+  <section id="instalar">
+    <p class="eyebrow">Manos a la obra</p>
+    <h2>Instalar y ejecutar</h2>
+    <p>El N3 vive en <code>laboratorio_n3/</code> del repositorio. Es una app local (servidor Python de la biblioteca estándar en <code>127.0.0.1:8768</code>), independiente del N1 y el N2.</p>
+    <div class="term"><div class="bar"><i></i><i></i><i></i><span>zsh</span></div><pre><span class="p">$ </span>cd laboratorio_n3/app
+<span class="p">$ </span>bin/ciberlab3                 <span class="c"># abre la app en el navegador</span>
+<span class="p">$ </span>bin/ciberlab3 --escritorios   <span class="c"># un programa por escritorio (bspwm/EWMH)</span>
+<span class="p">$ </span>bin/ciberlab3-mode toggle     <span class="c"># modo bspwm (apaga N1 y N2)</span>
+<span class="p">$ </span>bin/ciberlab3 --stop          <span class="c"># detener el servidor</span></pre></div>
+    <p class="intro">Redes de laboratorio aisladas: <code>CORP 192.168.59.0/24</code> y <code>DMZ 192.168.60.0/24</code>. Labs Docker en <code>127.0.0.1:8220–8224</code> (Juice Shop, DVWA, WebGoat, VAmPI, CyberChef). ¿Una palabra o herramienta no te suena? Mira el <a href="glosario.html">Glosario</a>, los <a href="comandos.html">Comandos</a> y las <a href="herramientas.html">Herramientas</a>.</p>
+  </section>
+
+  </main>
+</div>
+
+<footer><div class="wrap">CiberLab · entorno de aprendizaje y auditoría. Úsalo solo en tus sistemas o con autorización por escrito.</div></footer>
+
+<script src="assets/videos-n3.js"></script>
+<script src="assets/site.js"></script>
+</body>
+</html>

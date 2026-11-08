@@ -47,4 +47,46 @@ Lo relevante para el operador: **detectarlas y demostrar el impacto con una prue
   challenge: 'Haz los labs de SSTI y de deserialización de la PortSwigger Academy. Para uno de ellos, redacta el hallazgo completo (descripción, PoC mínima, impacto, CVSS y remediación) listo para el informe.',
   refs: [['PortSwigger · SSTI', 'https://portswigger.net/web-security/server-side-template-injection'], ['PortSwigger · Insecure deserialization', 'https://portswigger.net/web-security/deserialization'], ['OWASP Testing Guide', 'https://owasp.org/www-project-web-security-testing-guide/']] },
 ]},
+{ name: 'Maestría', lessons: [
+{ id: 'web-03', t: 'Autenticación rota, JWT e IDOR/BOLA: romper el control de acceso', min: 70, labs: ['web'],
+  obj: ['Atacar implementaciones débiles de JWT', 'Encontrar IDOR/BOLA (acceder a datos de otros)', 'Entender que el control de acceso es el fallo web nº1 (OWASP A01)'],
+  theory: `El fallo más común de la web moderna es el **control de acceso roto** (OWASP A01). Tres clásicos:
+
+- **JWT débil**: tokens firmados mal. Ataques: \`alg:none\` (sin firma), secreto HMAC débil y crackeable, confusión de algoritmo (RS256→HS256 usando la clave pública como secreto), \`kid\`/\`jku\` manipulables.
+- **IDOR / BOLA**: \`/api/factura/1002\` → cambias a \`1003\` y ves la de otro. El servidor no comprueba que el objeto sea **tuyo**. Es el fallo nº1 de las APIs.
+- **Escalada de privilegios**: parámetros como \`role=admin\`, endpoints de administración sin comprobación por rol.
+
+Todo se demuestra en el laboratorio con una PoC mínima: ver un dato ajeno de prueba basta; no se extraen datos reales en un cliente.`,
+  steps: [
+    ['Analiza el JWT', '', 'Pega el token en jwt.io o `jwt_tool`. Mira el `alg` y los claims. Prueba `alg:none` y, si es HS256, crackea el secreto con hashcat (modo 16500) usando un diccionario.'],
+    ['Busca IDOR/BOLA en la API', '', 'En VAmPI/Juice Shop, autentícate como usuario A e intenta leer recursos de usuario B cambiando el identificador. Burp Repeater/Intruder lo automatiza.'],
+    ['Prueba escalada por parámetro', '', 'Repite peticiones de administración con tu sesión de usuario normal; manipula `role`/`isAdmin`. Si funciona, el control de acceso se hace solo en el front.'],
+    ['Reporta con impacto', '', 'Un IDOR que expone datos de todos los clientes es crítico. PoC mínima (un registro ajeno de prueba), impacto y remediación (comprobación de propiedad en el servidor).'],
+  ],
+  defense: 'Comprueba la **propiedad** de cada objeto en el servidor (no confíes en el ID del cliente), valida el rol en el backend, firma JWT con algoritmo fijo y secreto fuerte (o usa sesiones del servidor), rechaza `alg:none`, y aplica control de acceso por defecto denegado. Añade pruebas de autorización en el CI.',
+  quiz: [['Cambias `/api/pedido/1002` por `1003` y ves el pedido de otro. Eso es…', ['XSS', 'IDOR/BOLA (control de acceso roto)', 'SQLi'], 1, 'El servidor no verifica que el objeto te pertenezca: IDOR/BOLA, fallo nº1 de APIs.'],
+         ['Un JWT que acepta `alg:none`…', ['Es seguro', 'Acepta tokens sin firma: puedes forjar cualquier identidad', 'Va más rápido'], 1, 'Sin firma, el servidor confía en lo que tú escribas en el token.']],
+  challenge: 'En VAmPI explota un BOLA para leer datos de otro usuario y, en un JWT de laboratorio, demuestra `alg:none` o el crackeo del secreto HMAC. Redacta ambos como hallazgos con remediación.',
+  refs: [['PortSwigger · JWT', 'https://portswigger.net/web-security/jwt'], ['OWASP API1 BOLA', 'https://owasp.org/API-Security/editions/2023/en/0xa1-broken-object-level-authorization/'], ['jwt_tool', 'https://github.com/ticarpi/jwt_tool']] },
+{ id: 'web-04', t: 'Cadenas que acaban en RCE: traversal, smuggling y SSRF a la nube', min: 80, labs: ['web'],
+  obj: ['Encadenar fallos individuales en un impacto grave', 'Entender el HTTP request smuggling a alto nivel', 'Rematar la cadena SSRF → metadatos → credenciales cloud'],
+  theory: `El pentester senior no busca un fallo aislado, sino **cadenas**:
+
+- **Path traversal / LFI → RCE**: leer ficheros arbitrarios (\`../../etc/passwd\`) y, encadenado con subida o envenenamiento de logs, ejecutar código.
+- **HTTP request smuggling**: cuando el front-end (proxy/CDN) y el back-end interpretan de forma distinta dónde acaba una petición (\`Content-Length\` vs \`Transfer-Encoding\`), «cuelas» una petición dentro de otra: envenenas respuestas, saltas controles, robas peticiones de otros usuarios.
+- **SSRF → cloud**: la SSRF del nivel operador se remata leyendo el endpoint de metadatos (\`169.254.169.254\`) y obteniendo **credenciales temporales** de la instancia → acceso a la cuenta cloud (enlaza con el escritorio de Nube).
+
+La gracia es sumar: un traversal «medio» + un log accesible = RCE «crítico». El informe debe contar la **cadena**, no las piezas sueltas.`,
+  steps: [
+    ['Path traversal a lectura de ficheros', 'curl "http://sitio/descarga?file=../../../../etc/passwd"', 'Confirma la lectura arbitraria. Luego valora si puedes escribir donde el servidor ejecuta (logs, uploads) para escalar a RCE.'],
+    ['Detecta request smuggling', '', 'Con la extensión HTTP Request Smuggler de Burp, prueba desincronización CL.TE/TE.CL contra un objetivo de laboratorio. Nunca contra infraestructura ajena.'],
+    ['Remata la SSRF en la nube', 'curl --resolve ... "http://sitio/fetch?url=http://169.254.169.254/latest/meta-data/iam/security-credentials/"', 'En un lab cloud (o con IMDSv1 simulado), la SSRF entrega credenciales de la instancia. Pasa al escritorio de Nube para usarlas.'],
+    ['Cuenta la cadena en el informe', '', 'Dibuja: SSRF → metadatos → credenciales → acción en la cuenta cloud. El impacto combinado es lo que mueve a la organización a arreglarlo.'],
+  ],
+  defense: 'Normaliza y valida rutas (nada de ficheros por entrada de usuario), homogeneiza el parsing HTTP entre front y back (HTTP/2 extremo a extremo, rechazar peticiones ambiguas), IMDSv2 con token obligatorio, listas blancas de destino en funciones que «traen» URLs, y segmentar para que el servidor no alcance servicios internos.',
+  quiz: [['El HTTP request smuggling explota que…', ['El servidor va lento', 'Front-end y back-end interpretan distinto dónde acaba la petición', 'El TLS es débil'], 1, 'La desincronización (CL vs TE) permite colar una petición dentro de otra.'],
+         ['¿Qué convierte una SSRF «media» en crítica en la nube?', ['El color del botón', 'Leer el endpoint de metadatos y obtener credenciales de la instancia', 'Nada'], 1, 'Las credenciales de la instancia dan acceso a la cuenta cloud: impacto crítico.']],
+  challenge: 'Encadena en laboratorio un path traversal con otra pieza hasta RCE, y por separado reproduce una SSRF que llegue a un endpoint de metadatos simulado. Documenta cada cadena de principio a fin.',
+  refs: [['PortSwigger · Request smuggling', 'https://portswigger.net/web-security/request-smuggling'], ['PortSwigger · Path traversal', 'https://portswigger.net/web-security/file-path-traversal'], ['AWS IMDSv2', 'https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/configuring-instance-metadata-service.html']] },
+]},
 ]};

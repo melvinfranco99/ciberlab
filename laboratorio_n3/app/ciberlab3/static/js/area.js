@@ -17,7 +17,7 @@ CL.renderArea = (root, areaId, sub) => {
       <a class="ls ${!sub ? 'on' : ''}" href="#/${areaId}"><span class="ck">⌂</span><span>Presentación y ruta del área</span></a>
       ${a.levels.map((lv, li) => {
         const d = lv.lessons.filter(l => CL.state.done[l.id]).length;
-        return `<div class="lvl l${li}"><span>${CL.LEVELS[li] || lv.name}</span><span>${d}/${lv.lessons.length}</span></div>` +
+        return `<div class="lvl l${li}"><span>${lv.name || CL.LEVELS[li]}</span><span>${d}/${lv.lessons.length}</span></div>` +
           lv.lessons.map(l => `<a class="ls ${CL.state.done[l.id] ? 'done' : ''} ${sub === l.id ? 'on' : ''}" href="#/${areaId}/${l.id}">
             <span class="ck">${CL.state.done[l.id] ? '✓' : ''}</span><span>${CL.esc(l.t)}</span></a>`).join('');
       }).join('')}
@@ -43,7 +43,7 @@ CL.renderArea = (root, areaId, sub) => {
       ${CL.md(a.intro)}
       <h2>Ruta del área: de principiante a experto</h2>
       <div class="roadmap">${a.levels.map((lv, li) => `
-        <div class="rm"><div class="t" style="color:${['#4ade80', '#60a5fa', '#f59e0b', '#f43f5e'][li]}">${CL.LEVELS[li]}</div>
+        <div class="rm"><div class="t" style="color:${['#4ade80', '#60a5fa', '#f59e0b', '#f43f5e'][li]}">${lv.name || CL.LEVELS[li]}</div>
         <ol>${lv.lessons.map(l => `<li><a href="#/${areaId}/${l.id}">${CL.esc(l.t)}</a> ${CL.state.done[l.id] ? '<span class="ok">✓</span>' : ''} <span class="mut small">· ${l.min || 30} min</span></li>`).join('')}</ol></div>`).join('')}
       </div>
       ${a.outro ? CL.md(a.outro) : ''}`;
@@ -52,7 +52,7 @@ CL.renderArea = (root, areaId, sub) => {
   function lesson(l, prev, next) {
     const done = !!CL.state.done[l.id];
     wrap.innerHTML = `
-      <div class="meta"><span class="chip lv${l.level}">${CL.LEVELS[l.level]}</span><span class="chip">⏱ ${l.min || 30} min</span>${CL.labChips(l.labs)}</div>
+      <div class="meta"><span class="chip lv${l.level}">${a.levels[l.level]?.name || CL.LEVELS[l.level]}</span><span class="chip">⏱ ${l.min || 30} min</span>${CL.labChips(l.labs)}</div>
       <h1>${CL.esc(l.t)}</h1>
       ${l.obj?.length ? `<div class="box"><h4>🎯 Al terminar sabrás</h4><ul class="obj">${l.obj.map(o => `<li>${CL.inline(o)}</li>`).join('')}</ul></div>` : ''}
       ${l.theory ? `<h2>📖 Teoría</h2>${CL.md(l.theory)}` : ''}
